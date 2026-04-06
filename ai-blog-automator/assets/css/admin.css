@@ -1,0 +1,100 @@
+/* AI Blog Automator — admin */
+.aiba-wrap .aiba-cards {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin: 20px 0;
+}
+
+.aiba-wrap .aiba-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 16px 20px;
+	min-width: 160px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.aiba-wrap .aiba-stat {
+	font-size: 28px;
+	font-weight: 600;
+	margin: 8px 0 0;
+}
+
+.aiba-wrap .aiba-actions {
+	margin: 16px 0;
+}
+
+.aiba-wrap .aiba-inline-msg {
+	min-height: 1.5em;
+	color: #2271b1;
+}
+
+.aiba-wrap .aiba-table {
+	margin-top: 12px;
+}
+
+.aiba-wrap .aiba-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 12px;
+	text-transform: capitalize;
+}
+
+.aiba-wrap .aiba-badge-success {
+	background: #d5f0dd;
+	color: #1e4620;
+}
+
+.aiba-wrap .aiba-badge-error {
+	background: #f8d7da;
+	color: #721c24;
+}
+
+.aiba-wrap .aiba-badge-warning {
+	background: #fff3cd;
+	color: #856404;
+}
+
+.aiba-wrap .aiba-badge-pending {
+	background: #e7f1ff;
+	color: #1d3a5c;
+}
+
+.aiba-wrap .aiba-badge-processing {
+	background: #e2e3f4;
+	color: #2c2a5e;
+}
+
+.aiba-wrap .aiba-badge-completed {
+	background: #d5f0dd;
+	color: #1e4620;
+}
+
+.aiba-wrap .aiba-badge-failed {
+	background: #f8d7da;
+	color: #721c24;
+}
+
+.aiba-wrap .aiba-filters label {
+	margin-right: 12px;
+}
+
+.aiba-wrap .aiba-progress ol {
+	list-style: decimal;
+	margin-left: 1.5em;
+}
+
+.aiba-wrap .aiba-progress .aiba-step-done {
+	color: #00a32a;
+	font-weight: 600;
+}
+
+.aiba-wrap .aiba-tabs {
+	margin-top: 12px;
+}
+
+.aiba-wrap .aiba-tab-panel {
+	margin-top: 16px;
+}
