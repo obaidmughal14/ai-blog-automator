@@ -36,6 +36,7 @@ class AIBA_Admin_UI {
 		add_action( 'wp_ajax_aiba_queue_bulk', array( __CLASS__, 'ajax_queue_bulk' ) );
 		add_action( 'admin_post_aiba_export_logs', array( __CLASS__, 'export_logs_csv' ) );
 		add_action( 'admin_post_aiba_add_queue', array( __CLASS__, 'handle_add_queue' ) );
+		add_action( 'admin_post_aiba_bulk_queue_keywords', array( __CLASS__, 'handle_bulk_queue_keywords' ) );
 		add_action( 'admin_post_aiba_premium_unlock', array( __CLASS__, 'handle_premium_unlock' ) );
 		add_filter( 'admin_body_class', array( __CLASS__, 'admin_body_class' ) );
 	}
@@ -118,6 +119,12 @@ class AIBA_Admin_UI {
 			'aiba_llm_provider',
 			'aiba_openai_api_key',
 			'aiba_openai_model',
+			'aiba_anthropic_api_key',
+			'aiba_anthropic_model',
+			'aiba_custom_llm_url',
+			'aiba_custom_llm_api_key',
+			'aiba_custom_llm_model',
+			'aiba_custom_llm_auth_header',
 			'aiba_pexels_api_key',
 			'aiba_google_credentials',
 			'aiba_site_niche',
@@ -126,6 +133,15 @@ class AIBA_Admin_UI {
 			'aiba_language',
 			'aiba_author_id',
 			'aiba_category_id',
+			'aiba_category_ids',
+			'aiba_article_template',
+			'aiba_ai_tag_expansion',
+			'aiba_ai_suggest_categories',
+			'aiba_prompt_outline_prefix',
+			'aiba_prompt_outline_suffix',
+			'aiba_prompt_section_prefix',
+			'aiba_prompt_section_suffix',
+			'aiba_prompt_global_append',
 			'aiba_auto_tags',
 			'aiba_max_internal_links',
 			'aiba_images_per_post',
@@ -136,6 +152,7 @@ class AIBA_Admin_UI {
 			'aiba_publish_time',
 			'aiba_auto_index',
 			'aiba_queue_frequency',
+			'aiba_queue_custom_minutes',
 			'aiba_seo_plugin',
 			'aiba_add_faq_schema',
 			'aiba_add_article_schema',
@@ -171,7 +188,7 @@ class AIBA_Admin_UI {
 	}
 
 	public static function sanitize_option_aiba_llm_provider( $value ): string {
-		$allowed = array( 'auto', 'gemini', 'openai' );
+		$allowed = array( 'auto', 'gemini', 'openai', 'claude', 'custom' );
 		$v       = is_string( $value ) ? $value : 'auto';
 		return in_array( $v, $allowed, true ) ? $v : 'auto';
 	}
@@ -191,6 +208,33 @@ class AIBA_Admin_UI {
 		return in_array( $v, $allowed, true ) ? $v : 'gpt-4o-mini';
 	}
 
+	public static function sanitize_option_aiba_anthropic_api_key( $value ): string {
+		return is_string( $value ) ? sanitize_text_field( $value ) : '';
+	}
+
+	public static function sanitize_option_aiba_anthropic_model( $value ): string {
+		$v = is_string( $value ) ? sanitize_text_field( $value ) : '';
+		return $v !== '' ? $v : 'claude-sonnet-4-20250514';
+	}
+
+	public static function sanitize_option_aiba_custom_llm_url( $value ): string {
+		return is_string( $value ) ? esc_url_raw( trim( $value ) ) : '';
+	}
+
+	public static function sanitize_option_aiba_custom_llm_api_key( $value ): string {
+		return is_string( $value ) ? sanitize_text_field( $value ) : '';
+	}
+
+	public static function sanitize_option_aiba_custom_llm_model( $value ): string {
+		$v = is_string( $value ) ? sanitize_text_field( $value ) : '';
+		return $v !== '' ? $v : 'default';
+	}
+
+	public static function sanitize_option_aiba_custom_llm_auth_header( $value ): string {
+		$v = is_string( $value ) ? sanitize_text_field( $value ) : '';
+		return $v !== '' ? $v : 'Authorization';
+	}
+
 	public static function sanitize_option_aiba_pexels_api_key( $value ): string {
 		return is_string( $value ) ? sanitize_text_field( $value ) : '';
 	}
@@ -204,7 +248,7 @@ class AIBA_Admin_UI {
 	}
 
 	public static function sanitize_option_aiba_word_count( $value ): int {
-		return max( 300, (int) $value );
+		return max( 300, min( 5000, (int) $value ) );
 	}
 
 	public static function sanitize_option_aiba_tone( $value ): string {
@@ -221,6 +265,49 @@ class AIBA_Admin_UI {
 
 	public static function sanitize_option_aiba_category_id( $value ): int {
 		return max( 0, (int) $value );
+	}
+
+	public static function sanitize_option_aiba_category_ids( $value ): array {
+		if ( ! is_array( $value ) ) {
+			return (array) get_option( 'aiba_category_ids', array() );
+		}
+		$out = array_values( array_filter( array_map( 'intval', $value ) ) );
+		if ( ! empty( $out ) ) {
+			update_option( 'aiba_category_id', (int) $out[0] );
+		}
+		return $out;
+	}
+
+	public static function sanitize_option_aiba_article_template( $value ): string {
+		return AIBA_LLM_Templates::sanitize_article_template( is_string( $value ) ? $value : 'standard' );
+	}
+
+	public static function sanitize_option_aiba_ai_tag_expansion( $value ): string {
+		return ( '1' === (string) $value || true === $value || 1 === $value ) ? '1' : '0';
+	}
+
+	public static function sanitize_option_aiba_ai_suggest_categories( $value ): string {
+		return ( '1' === (string) $value || true === $value || 1 === $value ) ? '1' : '0';
+	}
+
+	public static function sanitize_option_aiba_prompt_outline_prefix( $value ): string {
+		return is_string( $value ) ? sanitize_textarea_field( $value ) : '';
+	}
+
+	public static function sanitize_option_aiba_prompt_outline_suffix( $value ): string {
+		return is_string( $value ) ? sanitize_textarea_field( $value ) : '';
+	}
+
+	public static function sanitize_option_aiba_prompt_section_prefix( $value ): string {
+		return is_string( $value ) ? sanitize_textarea_field( $value ) : '';
+	}
+
+	public static function sanitize_option_aiba_prompt_section_suffix( $value ): string {
+		return is_string( $value ) ? sanitize_textarea_field( $value ) : '';
+	}
+
+	public static function sanitize_option_aiba_prompt_global_append( $value ): string {
+		return is_string( $value ) ? sanitize_textarea_field( $value ) : '';
 	}
 
 	public static function sanitize_option_aiba_auto_tags( $value ): string {
@@ -261,9 +348,13 @@ class AIBA_Admin_UI {
 	}
 
 	public static function sanitize_option_aiba_queue_frequency( $value ): string {
-		$allowed = array( 'daily', '12hr', '6hr' );
+		$allowed = array( 'daily', '12hr', '6hr', '3hr', '2hr', 'custom' );
 		$v       = is_string( $value ) ? $value : 'daily';
 		return in_array( $v, $allowed, true ) ? $v : 'daily';
+	}
+
+	public static function sanitize_option_aiba_queue_custom_minutes( $value ): int {
+		return max( 30, min( 1440, (int) $value ) );
 	}
 
 	public static function sanitize_option_aiba_seo_plugin( $value ): string {
@@ -612,22 +703,36 @@ class AIBA_Admin_UI {
 		$topic      = isset( $_POST['topic'] ) ? sanitize_text_field( wp_unslash( $_POST['topic'] ) ) : '';
 		$primary    = isset( $_POST['primary_keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['primary_keyword'] ) ) : '';
 		$secondary  = isset( $_POST['secondary_keywords'] ) ? sanitize_text_field( wp_unslash( $_POST['secondary_keywords'] ) ) : '';
-		$category   = isset( $_POST['category_id'] ) ? (int) $_POST['category_id'] : (int) get_option( 'aiba_category_id', 0 );
 		$word_count = isset( $_POST['word_count'] ) ? (int) $_POST['word_count'] : (int) get_option( 'aiba_word_count', 1500 );
-		$word_count = max( 300, $word_count );
+		$word_count = max( 300, min( 5000, $word_count ) );
 		$tone       = isset( $_POST['tone'] ) ? sanitize_text_field( wp_unslash( $_POST['tone'] ) ) : (string) get_option( 'aiba_tone', 'Professional' );
 		$publish_now = ! empty( $_POST['publish_now'] );
+
+		$cat_ids = isset( $_POST['category_ids'] ) && is_array( $_POST['category_ids'] ) ? array_map( 'intval', wp_unslash( $_POST['category_ids'] ) ) : array();
+		$cat_ids = array_values( array_filter( $cat_ids ) );
+		if ( empty( $cat_ids ) && isset( $_POST['category_id'] ) ) {
+			$cat_ids = array( (int) $_POST['category_id'] );
+		}
+		if ( empty( $cat_ids ) ) {
+			$cat_ids = AIBA_Core::get_default_category_ids();
+		}
+		$primary_cat = ! empty( $cat_ids ) ? (int) $cat_ids[0] : (int) get_option( 'aiba_category_id', 0 );
+
+		$tpl = isset( $_POST['article_template'] ) ? sanitize_key( wp_unslash( $_POST['article_template'] ) ) : '';
+		$tpl = AIBA_LLM_Templates::sanitize_article_template( $tpl );
 
 		$sec_arr = array_filter( array_map( 'trim', explode( ',', $secondary ) ) );
 
 		$job = array(
-			'topic'               => $topic,
-			'primary_keyword'     => $primary,
-			'secondary_keywords'    => $sec_arr,
-			'category_id'         => $category,
-			'word_count'          => $word_count,
-			'tone'                => $tone,
-			'language'            => (string) get_option( 'aiba_language', 'English' ),
+			'topic'                => $topic,
+			'primary_keyword'      => $primary,
+			'secondary_keywords'   => $sec_arr,
+			'category_id'          => $primary_cat,
+			'category_ids'         => $cat_ids,
+			'word_count'           => $word_count,
+			'tone'                 => $tone,
+			'language'             => (string) get_option( 'aiba_language', 'English' ),
+			'article_template'     => $tpl,
 		);
 
 		$article = AIBA_Core::content_generator()->generate_article( $job );
@@ -636,7 +741,7 @@ class AIBA_Admin_UI {
 				wp_send_json_error(
 					array(
 						'code'    => 'rate_limit',
-						'message' => __( 'Gemini quota or rate limit reached. Wait several minutes, enable billing in Google AI Studio if needed, or reduce how often the queue runs. Nothing was saved.', 'ai-blog-automator' ),
+						'message' => __( 'LLM quota or rate limit reached. Wait and retry, check provider billing, add fallback API keys under Settings → API, or slow the queue. Nothing was saved.', 'ai-blog-automator' ),
 					)
 				);
 			}
@@ -645,7 +750,8 @@ class AIBA_Admin_UI {
 
 		$settings = array(
 			'author_id'      => (int) get_option( 'aiba_author_id', get_current_user_id() ),
-			'category_id'    => $category,
+			'category_id'    => $primary_cat,
+			'category_ids'   => $cat_ids,
 			'auto_publish'   => $publish_now,
 			'publish_status' => $publish_now ? 'publish' : (string) get_option( 'aiba_publish_status', 'draft' ),
 			'scheduled_time' => null,
@@ -687,6 +793,22 @@ class AIBA_Admin_UI {
 		if ( '' !== $okey ) {
 			$openai = AIBA_Core::openai()->validate_api_key();
 		}
+		$claude         = true;
+		$claude_skipped = true;
+		$ckey           = (string) get_option( 'aiba_anthropic_api_key', '' );
+		if ( '' !== $ckey ) {
+			$claude_skipped = false;
+			$test           = AIBA_Core::anthropic()->generate_text( 'Reply with exactly: OK', array( 'maxOutputTokens' => 32 ) );
+			$claude         = ! is_wp_error( $test ) && str_contains( strtoupper( (string) $test ), 'OK' );
+		}
+		$custom         = true;
+		$custom_skipped = true;
+		$curl           = (string) get_option( 'aiba_custom_llm_url', '' );
+		if ( '' !== $curl ) {
+			$custom_skipped = false;
+			$test_c         = AIBA_Core::custom_llm()->generate_text( 'Reply with exactly: OK', array( 'maxOutputTokens' => 32 ) );
+			$custom         = ! is_wp_error( $test_c );
+		}
 		$pexels = false;
 		$key    = (string) get_option( 'aiba_pexels_api_key', '' );
 		if ( $key !== '' ) {
@@ -708,13 +830,17 @@ class AIBA_Admin_UI {
 
 		wp_send_json_success(
 			array(
-				'gemini'         => $gemini,
-				'openai'         => $openai,
-				'openai_skipped' => '' === $okey,
-				'pexels'         => $pexels,
-				'pexels_skipped' => $key === '',
-				'google'         => $google,
-				'google_skipped' => $creds === '',
+				'gemini'          => $gemini,
+				'openai'          => $openai,
+				'openai_skipped'  => '' === $okey,
+				'claude'          => $claude,
+				'claude_skipped'  => $claude_skipped,
+				'custom'          => $custom,
+				'custom_skipped'  => $custom_skipped,
+				'pexels'          => $pexels,
+				'pexels_skipped'  => $key === '',
+				'google'          => $google,
+				'google_skipped'  => $creds === '',
 			)
 		);
 	}
@@ -823,9 +949,18 @@ class AIBA_Admin_UI {
 		}
 		check_admin_referer( 'aiba_add_queue' );
 
-		$topic    = isset( $_POST['topic'] ) ? sanitize_text_field( wp_unslash( $_POST['topic'] ) ) : '';
-		$keyword  = isset( $_POST['keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['keyword'] ) ) : '';
-		$category = isset( $_POST['category_id'] ) ? (int) $_POST['category_id'] : (int) get_option( 'aiba_category_id', 0 );
+		$topic   = isset( $_POST['topic'] ) ? sanitize_text_field( wp_unslash( $_POST['topic'] ) ) : '';
+		$keyword = isset( $_POST['keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['keyword'] ) ) : '';
+
+		$cat_ids = isset( $_POST['category_ids'] ) && is_array( $_POST['category_ids'] ) ? array_map( 'intval', wp_unslash( $_POST['category_ids'] ) ) : array();
+		$cat_ids = array_values( array_filter( $cat_ids ) );
+		if ( empty( $cat_ids ) && isset( $_POST['category_id'] ) ) {
+			$cat_ids = array( (int) $_POST['category_id'] );
+		}
+		if ( empty( $cat_ids ) ) {
+			$cat_ids = AIBA_Core::get_default_category_ids();
+		}
+		$primary_cat = ! empty( $cat_ids ) ? (int) $cat_ids[0] : (int) get_option( 'aiba_category_id', 0 );
 
 		if ( $topic === '' || $keyword === '' ) {
 			wp_safe_redirect( wp_get_referer() ?: admin_url( 'admin.php?page=aiba-queue' ) );
@@ -839,13 +974,14 @@ class AIBA_Admin_UI {
 			array(
 				'topic'        => $topic,
 				'keyword'      => $keyword,
-				'category_id'  => $category,
+				'category_id'  => $primary_cat,
+				'category_ids' => AIBA_Core::encode_queue_category_ids( $cat_ids ),
 				'scheduled_at' => null,
 				'status'       => 'pending',
 				'post_id'      => 0,
 				'created_at'   => current_time( 'mysql' ),
 			),
-			array( '%s', '%s', '%d', '%s', '%s', '%d', '%s' )
+			array( '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s' )
 		);
 
 		wp_safe_redirect( admin_url( 'admin.php?page=aiba-queue&added=1' ) );
@@ -881,6 +1017,69 @@ class AIBA_Admin_UI {
 		}
 
 		wp_safe_redirect( $to );
+		exit;
+	}
+
+	/**
+	 * Bulk-add queue rows from pasted keywords (admin_post).
+	 */
+	public static function handle_bulk_queue_keywords(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Forbidden.', 'ai-blog-automator' ) );
+		}
+		check_admin_referer( 'aiba_bulk_queue' );
+
+		$lines = isset( $_POST['bulk_keywords'] ) ? sanitize_textarea_field( wp_unslash( $_POST['bulk_keywords'] ) ) : '';
+
+		$cat_ids = isset( $_POST['bulk_category_ids'] ) && is_array( $_POST['bulk_category_ids'] ) ? array_map( 'intval', wp_unslash( $_POST['bulk_category_ids'] ) ) : array();
+		$cat_ids = array_values( array_filter( $cat_ids ) );
+		if ( empty( $cat_ids ) ) {
+			$cat_ids = AIBA_Core::get_default_category_ids();
+		}
+		$primary_cat = ! empty( $cat_ids ) ? (int) $cat_ids[0] : (int) get_option( 'aiba_category_id', 0 );
+
+		global $wpdb;
+		$n = 0;
+		foreach ( preg_split( '/\r\n|\r|\n/', $lines ) as $line ) {
+			$line = trim( $line );
+			if ( '' === $line ) {
+				continue;
+			}
+			$parts = array_map( 'trim', explode( '|', $line, 2 ) );
+			$tpc   = $parts[0];
+			$kw    = isset( $parts[1] ) && $parts[1] !== '' ? $parts[1] : $parts[0];
+			if ( '' === $tpc || '' === $kw ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$wpdb->insert(
+				$wpdb->prefix . 'aiba_queue',
+				array(
+					'topic'        => sanitize_text_field( $tpc ),
+					'keyword'      => sanitize_text_field( $kw ),
+					'category_id'  => $primary_cat,
+					'category_ids' => AIBA_Core::encode_queue_category_ids( $cat_ids ),
+					'scheduled_at' => null,
+					'status'       => 'pending',
+					'post_id'      => 0,
+					'created_at'   => current_time( 'mysql' ),
+				),
+				array( '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s' )
+			);
+			if ( $wpdb->insert_id ) {
+				++$n;
+			}
+		}
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'       => 'aiba-queue',
+					'bulk_added' => (string) $n,
+				),
+				admin_url( 'admin.php' )
+			)
+		);
 		exit;
 	}
 }

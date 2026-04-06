@@ -37,10 +37,10 @@ class AIBA_Post_Publisher {
 	 * @return int|WP_Error Post ID.
 	 */
 	public function publish_post( array $article_data, array $settings = array() ) {
-		$author_id   = (int) ( $settings['author_id'] ?? get_option( 'aiba_author_id', get_current_user_id() ) );
-		$category_id = (int) ( $settings['category_id'] ?? get_option( 'aiba_category_id', 0 ) );
-		$auto_tags   = '1' === (string) get_option( 'aiba_auto_tags', '1' );
-		$tags        = ( $auto_tags && ! empty( $article_data['tags'] ) ) ? $article_data['tags'] : array();
+		$author_id      = (int) ( $settings['author_id'] ?? get_option( 'aiba_author_id', get_current_user_id() ) );
+		$category_ids   = $this->resolve_post_categories( $settings, $article_data );
+		$auto_tags      = '1' === (string) get_option( 'aiba_auto_tags', '1' );
+		$tags           = ( $auto_tags && ! empty( $article_data['tags'] ) ) ? $article_data['tags'] : array();
 
 		$post_id = wp_insert_post(
 			array(
@@ -48,7 +48,7 @@ class AIBA_Post_Publisher {
 				'post_content' => $article_data['content'],
 				'post_status'  => 'draft',
 				'post_author'  => $author_id,
-				'post_category'=> $category_id ? array( $category_id ) : array(),
+				'post_category'=> $category_ids,
 				'post_name'    => sanitize_title( (string) ( $article_data['slug'] ?? '' ) ),
 				'tags_input'   => $tags,
 			),
@@ -134,5 +134,51 @@ class AIBA_Post_Publisher {
 		AIBA_Core::log( $post_id, 'publish', 'success', 'Post saved: ' . $article_data['title'] );
 
 		return $post_id;
+	}
+
+	/**
+	 * Merge settings categories, legacy single ID, and AI-suggested IDs; validate terms.
+	 *
+	 * @param array<string, mixed> $settings
+	 * @param array<string, mixed> $article_data
+	 * @return array<int, int>
+	 */
+	private function resolve_post_categories( array $settings, array $article_data ): array {
+		$from_settings = $settings['category_ids'] ?? null;
+		if ( ! is_array( $from_settings ) ) {
+			$from_settings = AIBA_Core::get_default_category_ids();
+		}
+		$from_settings = array_values( array_filter( array_map( 'intval', $from_settings ) ) );
+
+		$legacy = (int) ( $settings['category_id'] ?? 0 );
+		if ( empty( $from_settings ) && $legacy > 0 ) {
+			$from_settings = array( $legacy );
+		}
+
+		$suggested = isset( $article_data['suggested_category_ids'] ) && is_array( $article_data['suggested_category_ids'] )
+			? array_map( 'intval', $article_data['suggested_category_ids'] )
+			: array();
+
+		$merged = array_values( array_unique( array_filter( array_merge( $from_settings, $suggested ) ) ) );
+
+		$valid = array();
+		foreach ( $merged as $tid ) {
+			if ( $tid < 1 ) {
+				continue;
+			}
+			$term = get_term( $tid, 'category' );
+			if ( $term instanceof WP_Term && ! is_wp_error( $term ) ) {
+				$valid[] = (int) $term->term_id;
+			}
+		}
+
+		$out = array_slice( $valid, 0, 10 );
+		if ( empty( $out ) ) {
+			$def = (int) get_option( 'default_category' );
+			if ( $def > 0 ) {
+				$out = array( $def );
+			}
+		}
+		return $out;
 	}
 }

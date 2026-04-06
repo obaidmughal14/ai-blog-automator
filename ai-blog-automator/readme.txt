@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 1.0.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,13 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 1.1.1 =
+* Multiple LLM providers: OpenAI, Claude (Anthropic), and custom OpenAI-compatible endpoints; Auto mode chains fallbacks on rate limits.
+* Word count 300–5000 with slider; queue schedules every 2h/3h/6h/12h/daily or custom minutes.
+* Multiple default categories, queue `category_ids`, bulk keyword queue, AI tag expansion and category suggestions (optional).
+* 13+ article format templates and custom prompt prefix/suffix/global append editor.
+* Security: empty default Gemini API key on new installs.
 
 = 1.0.0 =
 * Initial release.

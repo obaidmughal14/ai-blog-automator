@@ -49,6 +49,7 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 	<h2 class="nav-tab-wrapper aiba-tabs">
 		<a href="#aiba-tab-api" class="nav-tab nav-tab-active"><?php esc_html_e( 'API', 'ai-blog-automator' ); ?></a>
 		<a href="#aiba-tab-content" class="nav-tab"><?php esc_html_e( 'Content', 'ai-blog-automator' ); ?></a>
+		<a href="#aiba-tab-prompts" class="nav-tab"><?php esc_html_e( 'Prompts & formats', 'ai-blog-automator' ); ?></a>
 		<a href="#aiba-tab-auto" class="nav-tab"><?php esc_html_e( 'Automation', 'ai-blog-automator' ); ?></a>
 		<a href="#aiba-tab-seo" class="nav-tab"><?php esc_html_e( 'SEO', 'ai-blog-automator' ); ?></a>
 		<a href="#aiba-tab-adv" class="nav-tab"><?php esc_html_e( 'Advanced', 'ai-blog-automator' ); ?></a>
@@ -70,16 +71,18 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 							<?php
 							$lp = (string) get_option( 'aiba_llm_provider', 'auto' );
 							$choices = array(
-								'auto'   => __( 'Auto — Gemini first, OpenAI if Gemini is rate-limited (recommended)', 'ai-blog-automator' ),
+								'auto'   => __( 'Auto — Gemini → OpenAI → Claude → custom URL (by configured keys)', 'ai-blog-automator' ),
 								'gemini' => __( 'Gemini only', 'ai-blog-automator' ),
-								'openai' => __( 'OpenAI only', 'ai-blog-automator' ),
+								'openai' => __( 'OpenAI only (GPT-4 class models)', 'ai-blog-automator' ),
+								'claude' => __( 'Claude (Anthropic) only', 'ai-blog-automator' ),
+								'custom' => __( 'Custom OpenAI-compatible endpoint only', 'ai-blog-automator' ),
 							);
 							foreach ( $choices as $k => $lab ) {
 								printf( '<option %s value="%s">%s</option>', selected( $lp, $k, false ), esc_attr( $k ), esc_html( $lab ) );
 							}
 							?>
 						</select>
-						<p class="description"><?php esc_html_e( 'If Gemini hits quota (429), Auto uses your OpenAI key for that request when the key is set below.', 'ai-blog-automator' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Auto tries each provider in order when the previous hits a rate limit. Configure optional keys below for fallbacks.', 'ai-blog-automator' ); ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -104,6 +107,39 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 					</td>
 				</tr>
 				<tr>
+					<th scope="row"><label for="aiba_anthropic_api_key"><?php esc_html_e( 'Anthropic API key (Claude)', 'ai-blog-automator' ); ?></label></th>
+					<td>
+						<input type="password" class="large-text" id="aiba_anthropic_api_key" name="aiba_anthropic_api_key" value="<?php echo esc_attr( (string) get_option( 'aiba_anthropic_api_key', '' ) ); ?>" autocomplete="off" />
+						<p class="description"><?php esc_html_e( 'Optional. Used when provider is Claude or as an Auto fallback.', 'ai-blog-automator' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_anthropic_model"><?php esc_html_e( 'Claude model id', 'ai-blog-automator' ); ?></label></th>
+					<td><input type="text" class="large-text" id="aiba_anthropic_model" name="aiba_anthropic_model" value="<?php echo esc_attr( (string) get_option( 'aiba_anthropic_model', 'claude-sonnet-4-20250514' ) ); ?>" /></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_custom_llm_url"><?php esc_html_e( 'Custom LLM URL', 'ai-blog-automator' ); ?></label></th>
+					<td>
+						<input type="url" class="large-text" id="aiba_custom_llm_url" name="aiba_custom_llm_url" value="<?php echo esc_attr( (string) get_option( 'aiba_custom_llm_url', '' ) ); ?>" placeholder="https://api.example.com/v1/chat/completions" />
+						<p class="description"><?php esc_html_e( 'OpenAI-style POST JSON: model, messages, max_tokens. Optional API key below.', 'ai-blog-automator' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_custom_llm_model"><?php esc_html_e( 'Custom LLM model name', 'ai-blog-automator' ); ?></label></th>
+					<td><input type="text" class="large-text" id="aiba_custom_llm_model" name="aiba_custom_llm_model" value="<?php echo esc_attr( (string) get_option( 'aiba_custom_llm_model', 'default' ) ); ?>" /></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_custom_llm_api_key"><?php esc_html_e( 'Custom LLM API key', 'ai-blog-automator' ); ?></label></th>
+					<td><input type="password" class="large-text" id="aiba_custom_llm_api_key" name="aiba_custom_llm_api_key" value="<?php echo esc_attr( (string) get_option( 'aiba_custom_llm_api_key', '' ) ); ?>" autocomplete="off" /></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_custom_llm_auth_header"><?php esc_html_e( 'Custom auth header name', 'ai-blog-automator' ); ?></label></th>
+					<td>
+						<input type="text" class="regular-text" id="aiba_custom_llm_auth_header" name="aiba_custom_llm_auth_header" value="<?php echo esc_attr( (string) get_option( 'aiba_custom_llm_auth_header', 'Authorization' ) ); ?>" />
+						<p class="description"><?php esc_html_e( 'Default Authorization sends “Bearer {key}” when the key has no spaces; otherwise the raw key is sent in this header.', 'ai-blog-automator' ); ?></p>
+					</td>
+				</tr>
+				<tr>
 					<th scope="row"><label for="aiba_pexels_api_key"><?php esc_html_e( 'Pexels API key (optional)', 'ai-blog-automator' ); ?></label></th>
 					<td><input type="password" class="large-text" id="aiba_pexels_api_key" name="aiba_pexels_api_key" value="<?php echo esc_attr( (string) get_option( 'aiba_pexels_api_key', '' ) ); ?>" autocomplete="off" /></td>
 				</tr>
@@ -123,7 +159,12 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 				</tr>
 				<tr>
 					<th scope="row"><label for="aiba_word_count"><?php esc_html_e( 'Default word count', 'ai-blog-automator' ); ?></label></th>
-					<td><input type="number" min="300" id="aiba_word_count" name="aiba_word_count" value="<?php echo esc_attr( (string) get_option( 'aiba_word_count', 1500 ) ); ?>" /></td>
+					<td>
+						<?php $wc = (int) get_option( 'aiba_word_count', 1500 ); ?>
+						<input type="range" id="aiba_word_count_slider" min="300" max="5000" step="50" value="<?php echo esc_attr( (string) max( 300, min( 5000, $wc ) ) ); ?>" aria-hidden="true" />
+						<input type="number" min="300" max="5000" id="aiba_word_count" name="aiba_word_count" value="<?php echo esc_attr( (string) max( 300, min( 5000, $wc ) ) ); ?>" />
+						<p class="description"><?php esc_html_e( 'Target length for queue and defaults (300–5000). Premium adds extra headroom.', 'ai-blog-automator' ); ?></p>
+					</td>
 				</tr>
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Writing tone', 'ai-blog-automator' ); ?></th>
@@ -164,13 +205,24 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Default category', 'ai-blog-automator' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Default categories', 'ai-blog-automator' ); ?></th>
 					<td>
-						<select name="aiba_category_id">
+						<?php
+						$sel = get_option( 'aiba_category_ids', array() );
+						$sel = is_array( $sel ) ? array_map( 'intval', $sel ) : array();
+						if ( empty( $sel ) ) {
+							$one = (int) get_option( 'aiba_category_id', 0 );
+							if ( $one ) {
+								$sel = array( $one );
+							}
+						}
+						?>
+						<select name="aiba_category_ids[]" multiple size="8" style="min-width:280px">
 							<?php foreach ( $categories as $c ) : ?>
-								<option value="<?php echo (int) $c->term_id; ?>" <?php selected( (int) get_option( 'aiba_category_id' ), (int) $c->term_id ); ?>><?php echo esc_html( $c->name ); ?></option>
+								<option value="<?php echo (int) $c->term_id; ?>" <?php selected( in_array( (int) $c->term_id, $sel, true ), true ); ?>><?php echo esc_html( $c->name ); ?></option>
 							<?php endforeach; ?>
 						</select>
+						<p class="description"><?php esc_html_e( 'Posts can be assigned to multiple categories. Hold Ctrl/Cmd to select more than one.', 'ai-blog-automator' ); ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -181,12 +233,68 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 					</td>
 				</tr>
 				<tr>
+					<th scope="row"><?php esc_html_e( 'AI tag expansion', 'ai-blog-automator' ); ?></th>
+					<td>
+						<input type="hidden" name="aiba_ai_tag_expansion" value="0" />
+						<label><input type="checkbox" name="aiba_ai_tag_expansion" value="1" <?php checked( '1', (string) get_option( 'aiba_ai_tag_expansion', '0' ) ); ?> /> <?php esc_html_e( 'Ask the model for extra relevant tags (more API calls)', 'ai-blog-automator' ); ?></label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'AI category suggestions', 'ai-blog-automator' ); ?></th>
+					<td>
+						<input type="hidden" name="aiba_ai_suggest_categories" value="0" />
+						<label><input type="checkbox" name="aiba_ai_suggest_categories" value="1" <?php checked( '1', (string) get_option( 'aiba_ai_suggest_categories', '0' ) ); ?> /> <?php esc_html_e( 'Suggest additional categories from your existing list (merged with defaults)', 'ai-blog-automator' ); ?></label>
+					</td>
+				</tr>
+				<tr>
 					<th scope="row"><label for="aiba_max_internal_links"><?php esc_html_e( 'Max internal links', 'ai-blog-automator' ); ?></label></th>
 					<td><input type="number" min="1" max="20" id="aiba_max_internal_links" name="aiba_max_internal_links" value="<?php echo esc_attr( (string) get_option( 'aiba_max_internal_links', 5 ) ); ?>" /></td>
 				</tr>
 				<tr>
 					<th scope="row"><label for="aiba_images_per_post"><?php esc_html_e( 'In-content images (suggested)', 'ai-blog-automator' ); ?></label></th>
 					<td><input type="number" min="0" max="10" id="aiba_images_per_post" name="aiba_images_per_post" value="<?php echo esc_attr( (string) get_option( 'aiba_images_per_post', 3 ) ); ?>" /></td>
+				</tr>
+			</table>
+		</div>
+
+		<div id="aiba-tab-prompts" class="aiba-tab-panel" style="display:none">
+			<table class="form-table">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Default article format', 'ai-blog-automator' ); ?></th>
+					<td>
+						<select name="aiba_article_template">
+							<?php
+							$cur_tpl = (string) get_option( 'aiba_article_template', 'standard' );
+							foreach ( AIBA_LLM_Templates::get_article_formats() as $slug => $label ) {
+								printf( '<option %s value="%s">%s</option>', selected( $cur_tpl, $slug, false ), esc_attr( $slug ), esc_html( $label ) );
+							}
+							?>
+						</select>
+						<p class="description"><?php esc_html_e( 'How-To, Listicle, Case Study, and 10+ more — shapes outlines and section instructions.', 'ai-blog-automator' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_prompt_outline_prefix"><?php esc_html_e( 'Outline prompt — prefix', 'ai-blog-automator' ); ?></label></th>
+					<td><textarea class="large-text" rows="3" id="aiba_prompt_outline_prefix" name="aiba_prompt_outline_prefix"><?php echo esc_textarea( (string) get_option( 'aiba_prompt_outline_prefix', '' ) ); ?></textarea></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_prompt_outline_suffix"><?php esc_html_e( 'Outline prompt — suffix', 'ai-blog-automator' ); ?></label></th>
+					<td><textarea class="large-text" rows="3" id="aiba_prompt_outline_suffix" name="aiba_prompt_outline_suffix"><?php echo esc_textarea( (string) get_option( 'aiba_prompt_outline_suffix', '' ) ); ?></textarea></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_prompt_section_prefix"><?php esc_html_e( 'Section prompt — prefix', 'ai-blog-automator' ); ?></label></th>
+					<td><textarea class="large-text" rows="3" id="aiba_prompt_section_prefix" name="aiba_prompt_section_prefix"><?php echo esc_textarea( (string) get_option( 'aiba_prompt_section_prefix', '' ) ); ?></textarea></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_prompt_section_suffix"><?php esc_html_e( 'Section prompt — suffix', 'ai-blog-automator' ); ?></label></th>
+					<td><textarea class="large-text" rows="3" id="aiba_prompt_section_suffix" name="aiba_prompt_section_suffix"><?php echo esc_textarea( (string) get_option( 'aiba_prompt_section_suffix', '' ) ); ?></textarea></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_prompt_global_append"><?php esc_html_e( 'Append to every LLM request', 'ai-blog-automator' ); ?></label></th>
+					<td>
+						<textarea class="large-text" rows="4" id="aiba_prompt_global_append" name="aiba_prompt_global_append"><?php echo esc_textarea( (string) get_option( 'aiba_prompt_global_append', '' ) ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'Added after outline/section wrappers (e.g. brand voice, banned topics, locale).', 'ai-blog-automator' ); ?></p>
+					</td>
 				</tr>
 			</table>
 		</div>
@@ -239,14 +347,29 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Queue frequency', 'ai-blog-automator' ); ?></th>
 					<td>
-						<select name="aiba_queue_frequency">
+						<select name="aiba_queue_frequency" id="aiba_queue_frequency">
 							<?php
 							$qf = (string) get_option( 'aiba_queue_frequency', 'daily' );
-							foreach ( array( 'daily' => __( 'Daily', 'ai-blog-automator' ), '12hr' => __( 'Every 12 hours', 'ai-blog-automator' ), '6hr' => __( 'Every 6 hours', 'ai-blog-automator' ) ) as $k => $lab ) {
+							$freq_labels = array(
+								'daily'  => __( 'Daily', 'ai-blog-automator' ),
+								'12hr'   => __( 'Every 12 hours', 'ai-blog-automator' ),
+								'6hr'    => __( 'Every 6 hours', 'ai-blog-automator' ),
+								'3hr'    => __( 'Every 3 hours', 'ai-blog-automator' ),
+								'2hr'    => __( 'Every 2 hours', 'ai-blog-automator' ),
+								'custom' => __( 'Custom interval (minutes)', 'ai-blog-automator' ),
+							);
+							foreach ( $freq_labels as $k => $lab ) {
 								printf( '<option %s value="%s">%s</option>', selected( $qf, $k, false ), esc_attr( $k ), esc_html( $lab ) );
 							}
 							?>
 						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_queue_custom_minutes"><?php esc_html_e( 'Custom interval (minutes)', 'ai-blog-automator' ); ?></label></th>
+					<td>
+						<input type="number" min="30" max="1440" id="aiba_queue_custom_minutes" name="aiba_queue_custom_minutes" value="<?php echo esc_attr( (string) get_option( 'aiba_queue_custom_minutes', 120 ) ); ?>" />
+						<p class="description"><?php esc_html_e( 'Used when queue frequency is “Custom”. Minimum 30, maximum 1440 (24 hours).', 'ai-blog-automator' ); ?></p>
 					</td>
 				</tr>
 			</table>

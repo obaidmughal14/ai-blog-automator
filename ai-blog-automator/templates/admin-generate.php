@@ -9,7 +9,9 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$categories = get_categories( array( 'hide_empty' => false ) );
+$categories     = get_categories( array( 'hide_empty' => false ) );
+$article_formats = AIBA_LLM_Templates::get_article_formats();
+$def_cats       = AIBA_Core::get_default_category_ids();
 require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 ?>
 
@@ -44,11 +46,11 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 				<td><input type="text" class="large-text" id="aiba_gen_secondary" name="secondary_keywords" placeholder="kw1, kw2, kw3" /></td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="aiba_gen_cat"><?php esc_html_e( 'Category', 'ai-blog-automator' ); ?></label></th>
+				<th scope="row"><label for="aiba_gen_cats"><?php esc_html_e( 'Categories', 'ai-blog-automator' ); ?></label></th>
 				<td>
-					<select id="aiba_gen_cat" name="category_id">
+					<select id="aiba_gen_cats" name="category_ids[]" multiple size="6" style="min-width:260px">
 						<?php foreach ( $categories as $cat ) : ?>
-							<option value="<?php echo (int) $cat->term_id; ?>" <?php selected( (int) get_option( 'aiba_category_id' ), (int) $cat->term_id ); ?>>
+							<option value="<?php echo (int) $cat->term_id; ?>" <?php selected( in_array( (int) $cat->term_id, $def_cats, true ), true ); ?>>
 								<?php echo esc_html( $cat->name ); ?>
 							</option>
 						<?php endforeach; ?>
@@ -56,8 +58,25 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 				</td>
 			</tr>
 			<tr>
+				<th scope="row"><label for="aiba_gen_format"><?php esc_html_e( 'Article format', 'ai-blog-automator' ); ?></label></th>
+				<td>
+					<select id="aiba_gen_format" name="article_template">
+						<?php
+						$cur_f = (string) get_option( 'aiba_article_template', 'standard' );
+						foreach ( $article_formats as $slug => $label ) {
+							printf( '<option %s value="%s">%s</option>', selected( $cur_f, $slug, false ), esc_attr( $slug ), esc_html( $label ) );
+						}
+						?>
+					</select>
+				</td>
+			</tr>
+			<tr>
 				<th scope="row"><label for="aiba_gen_wc"><?php esc_html_e( 'Word count', 'ai-blog-automator' ); ?></label></th>
-				<td><input type="number" id="aiba_gen_wc" name="word_count" min="300" value="<?php echo esc_attr( (string) get_option( 'aiba_word_count', 1500 ) ); ?>" /></td>
+				<td>
+					<?php $gwc = max( 300, min( 5000, (int) get_option( 'aiba_word_count', 1500 ) ) ); ?>
+					<input type="range" id="aiba_gen_wc_slider" min="300" max="5000" step="50" value="<?php echo esc_attr( (string) $gwc ); ?>" />
+					<input type="number" id="aiba_gen_wc" name="word_count" min="300" max="5000" value="<?php echo esc_attr( (string) $gwc ); ?>" />
+				</td>
 			</tr>
 			<tr>
 				<th scope="row"><label for="aiba_gen_tone"><?php esc_html_e( 'Tone', 'ai-blog-automator' ); ?></label></th>

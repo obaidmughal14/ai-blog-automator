@@ -94,7 +94,7 @@ class AIBA_Premium {
 		if ( ! self::is_active() ) {
 			return $base;
 		}
-		return min( 6000, $base + 800 );
+		return min( 5800, $base + 800 );
 	}
 
 	public static function enhance_max_internal_links( int $base ): int {

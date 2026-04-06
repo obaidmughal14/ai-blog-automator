@@ -16,6 +16,24 @@
 			$(target).show();
 		});
 
+		$('#aiba_word_count_slider').on('input', function () {
+			$('#aiba_word_count').val($(this).val());
+		});
+		$('#aiba_word_count').on('change input', function () {
+			var v = Math.max(300, Math.min(5000, parseInt($(this).val(), 10) || 300));
+			$(this).val(v);
+			$('#aiba_word_count_slider').val(v);
+		});
+
+		$('#aiba_gen_wc_slider').on('input', function () {
+			$('#aiba_gen_wc').val($(this).val());
+		});
+		$('#aiba_gen_wc').on('change input', function () {
+			var v = Math.max(300, Math.min(5000, parseInt($(this).val(), 10) || 300));
+			$(this).val(v);
+			$('#aiba_gen_wc_slider').val(v);
+		});
+
 		$('#aiba-test-apis').on('click', function () {
 			var $btn = $(this);
 			$('#aiba-test-result').text('…');
@@ -29,9 +47,11 @@
 					var d = res.data;
 					var parts = [
 						'Gemini: ' + (d.gemini ? 'OK' : 'Fail'),
-						'OpenAI: ' + (d.openai_skipped ? 'skipped' : d.openai ? 'OK' : 'Fail'),
-						'Pexels: ' + (d.pexels_skipped ? 'skipped' : d.pexels ? 'OK' : 'Fail'),
-						'Google: ' + (d.google_skipped ? 'skipped' : d.google ? 'OK' : 'Fail'),
+						'OpenAI: ' + (d.openai_skipped ? 'skip' : d.openai ? 'OK' : 'Fail'),
+						'Claude: ' + (d.claude_skipped ? 'skip' : d.claude ? 'OK' : 'Fail'),
+						'Custom: ' + (d.custom_skipped ? 'skip' : d.custom ? 'OK' : 'Fail'),
+						'Pexels: ' + (d.pexels_skipped ? 'skip' : d.pexels ? 'OK' : 'Fail'),
+						'Google: ' + (d.google_skipped ? 'skip' : d.google ? 'OK' : 'Fail'),
 					];
 					$('#aiba-test-result').text(parts.join(' · '));
 				})
@@ -132,10 +152,11 @@
 				topic: $('#aiba_gen_topic').val(),
 				primary_keyword: $('#aiba_gen_primary').val(),
 				secondary_keywords: $('#aiba_gen_secondary').val(),
-				category_id: $('#aiba_gen_cat').val(),
 				word_count: $('#aiba_gen_wc').val(),
 				tone: $('#aiba_gen_tone').val(),
+				article_template: $('#aiba_gen_format').val(),
 				publish_now: $('#aiba_gen_publish').is(':checked') ? 1 : 0,
+				category_ids: $('#aiba_gen_cats').val() || [],
 			})
 				.done(function (res) {
 					$prog.find('.aiba-step').addClass('aiba-step-done');

@@ -31,6 +31,7 @@ class AIBA_Core {
 	 */
 	public static function init(): void {
 		self::load_includes();
+		add_action( 'init', array( __CLASS__, 'maybe_upgrade_db' ), 5 );
 		add_action( 'init', array( __CLASS__, 'load_textdomain' ) );
 
 		AIBA_Google_Indexing::instance();
@@ -56,6 +57,9 @@ class AIBA_Core {
 		$dir = AIBA_PLUGIN_DIR . 'includes/';
 		require_once $dir . 'class-gemini-api.php';
 		require_once $dir . 'class-openai-api.php';
+		require_once $dir . 'class-anthropic-api.php';
+		require_once $dir . 'class-custom-llm-api.php';
+		require_once $dir . 'class-llm-templates.php';
 		require_once $dir . 'class-llm-client.php';
 		require_once $dir . 'class-premium.php';
 		require_once $dir . 'class-trend-fetcher.php';
@@ -75,7 +79,8 @@ class AIBA_Core {
 	 */
 	public static function activate(): void {
 		self::load_includes();
-		self::create_tables();
+		self::apply_db_schema();
+		update_option( 'aiba_db_schema', 3 );
 		self::add_default_options();
 		AIBA_Scheduler::register_cron_schedules_filter();
 		$recurrence = self::map_queue_frequency_to_recurrence( get_option( 'aiba_queue_frequency', 'daily' ) );
@@ -95,10 +100,61 @@ class AIBA_Core {
 	 */
 	public static function map_queue_frequency_to_recurrence( string $freq ): string {
 		return match ( $freq ) {
+			'2hr' => 'aiba_every_2_hours',
+			'3hr' => 'aiba_every_3_hours',
 			'6hr' => 'aiba_every_6_hours',
 			'12hr' => 'aiba_every_12_hours',
+			'custom' => 'aiba_queue_custom',
 			default => 'aiba_daily',
 		};
+	}
+
+	/**
+	 * dbDelta queue table when schema version bumps (adds category_ids, etc.).
+	 */
+	public static function maybe_upgrade_db(): void {
+		$ver = (int) get_option( 'aiba_db_schema', 0 );
+		if ( $ver >= 3 ) {
+			return;
+		}
+		self::apply_db_schema();
+		update_option( 'aiba_db_schema', 3 );
+	}
+
+	/**
+	 * JSON list of category term IDs for queue rows.
+	 *
+	 * @param array<int, int> $ids Term IDs.
+	 */
+	public static function encode_queue_category_ids( array $ids ): string {
+		$ids = array_values( array_unique( array_filter( array_map( 'intval', $ids ) ) ) );
+		return $ids ? wp_json_encode( $ids ) : '';
+	}
+
+	/**
+	 * @return array<int, int>
+	 */
+	public static function decode_queue_category_ids( string $json ): array {
+		if ( '' === trim( $json ) ) {
+			return array();
+		}
+		$a = json_decode( $json, true );
+		return is_array( $a ) ? array_values( array_filter( array_map( 'intval', $a ) ) ) : array();
+	}
+
+	/**
+	 * Default category IDs from settings (multi + legacy single).
+	 *
+	 * @return array<int, int>
+	 */
+	public static function get_default_category_ids(): array {
+		$multi = get_option( 'aiba_category_ids', array() );
+		$multi = is_array( $multi ) ? array_filter( array_map( 'intval', $multi ) ) : array();
+		if ( ! empty( $multi ) ) {
+			return array_values( array_unique( $multi ) );
+		}
+		$one = (int) get_option( 'aiba_category_id', 0 );
+		return $one ? array( $one ) : array();
 	}
 
 	/**
@@ -110,9 +166,9 @@ class AIBA_Core {
 	}
 
 	/**
-	 * Create database tables.
+	 * Create / upgrade database tables.
 	 */
-	private static function create_tables(): void {
+	private static function apply_db_schema(): void {
 		global $wpdb;
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$charset = $wpdb->get_charset_collate();
@@ -134,6 +190,7 @@ class AIBA_Core {
 			topic varchar(500) NOT NULL,
 			keyword varchar(255) NOT NULL,
 			category_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			category_ids text NULL,
 			scheduled_at datetime NULL,
 			status varchar(20) NOT NULL DEFAULT 'pending',
 			post_id bigint(20) unsigned NOT NULL DEFAULT 0,
@@ -162,7 +219,7 @@ class AIBA_Core {
 			$admin_id = $users ? (int) $users[0]->ID : 1;
 		}
 
-		add_option( 'aiba_gemini_api_key', 'AIzaSyBtbj6SCyPwYGEGLIim3SXNqs_sTc7RjKM' );
+		add_option( 'aiba_gemini_api_key', '' );
 		add_option( 'aiba_pexels_api_key', '' );
 		add_option( 'aiba_google_credentials', '' );
 		add_option( 'aiba_site_niche', '' );
@@ -194,6 +251,22 @@ class AIBA_Core {
 		add_option( 'aiba_llm_provider', 'auto' );
 		add_option( 'aiba_openai_api_key', '' );
 		add_option( 'aiba_openai_model', 'gpt-4o-mini' );
+		add_option( 'aiba_anthropic_api_key', '' );
+		add_option( 'aiba_anthropic_model', 'claude-sonnet-4-20250514' );
+		add_option( 'aiba_custom_llm_url', '' );
+		add_option( 'aiba_custom_llm_api_key', '' );
+		add_option( 'aiba_custom_llm_model', 'default' );
+		add_option( 'aiba_custom_llm_auth_header', 'Authorization' );
+		add_option( 'aiba_queue_custom_minutes', 120 );
+		add_option( 'aiba_category_ids', array() );
+		add_option( 'aiba_article_template', 'standard' );
+		add_option( 'aiba_ai_tag_expansion', '0' );
+		add_option( 'aiba_ai_suggest_categories', '0' );
+		add_option( 'aiba_prompt_outline_prefix', '' );
+		add_option( 'aiba_prompt_outline_suffix', '' );
+		add_option( 'aiba_prompt_section_prefix', '' );
+		add_option( 'aiba_prompt_section_suffix', '' );
+		add_option( 'aiba_prompt_global_append', '' );
 		add_option( 'aiba_premium_unlocked', '0' );
 	}
 
@@ -239,6 +312,26 @@ class AIBA_Core {
 			self::$services['openai'] = new AIBA_OpenAI_API();
 		}
 		return self::$services['openai'];
+	}
+
+	/**
+	 * Anthropic Claude client.
+	 */
+	public static function anthropic(): AIBA_Anthropic_API {
+		if ( ! isset( self::$services['anthropic'] ) ) {
+			self::$services['anthropic'] = new AIBA_Anthropic_API();
+		}
+		return self::$services['anthropic'];
+	}
+
+	/**
+	 * Custom OpenAI-compatible endpoint.
+	 */
+	public static function custom_llm(): AIBA_Custom_LLM_API {
+		if ( ! isset( self::$services['custom_llm'] ) ) {
+			self::$services['custom_llm'] = new AIBA_Custom_LLM_API();
+		}
+		return self::$services['custom_llm'];
 	}
 
 	/**
