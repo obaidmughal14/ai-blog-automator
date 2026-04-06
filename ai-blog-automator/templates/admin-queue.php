@@ -10,17 +10,16 @@
 defined( 'ABSPATH' ) || exit;
 
 $status_filter = isset( $_GET['aiba_status'] ) ? sanitize_text_field( wp_unslash( $_GET['aiba_status'] ) ) : '';
-$categories    = get_categories( array( 'hide_empty' => false ) );
+$categories = get_categories( array( 'hide_empty' => false ) );
+require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 ?>
-<div class="wrap aiba-wrap">
-	<h1><?php esc_html_e( 'Content queue', 'ai-blog-automator' ); ?></h1>
 
 	<?php if ( ! empty( $_GET['added'] ) ) : ?>
 		<div class="notice notice-success"><p><?php esc_html_e( 'Job added to queue.', 'ai-blog-automator' ); ?></p></div>
 	<?php endif; ?>
 
-	<h2><?php esc_html_e( 'Add to queue', 'ai-blog-automator' ); ?></h2>
-	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="aiba-form">
+	<h2 class="aiba-section-title"><?php esc_html_e( 'Add to queue', 'ai-blog-automator' ); ?></h2>
+	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="aiba-form aiba-form-card">
 		<input type="hidden" name="action" value="aiba_add_queue" />
 		<?php wp_nonce_field( 'aiba_add_queue' ); ?>
 		<table class="form-table">
@@ -46,7 +45,7 @@ $categories    = get_categories( array( 'hide_empty' => false ) );
 		<?php submit_button( __( 'Add to queue', 'ai-blog-automator' ) ); ?>
 	</form>
 
-	<h2><?php esc_html_e( 'Filter', 'ai-blog-automator' ); ?></h2>
+	<h2 class="aiba-section-title"><?php esc_html_e( 'Filter', 'ai-blog-automator' ); ?></h2>
 	<ul class="subsubsub">
 		<li><a href="<?php echo esc_url( admin_url( 'admin.php?page=aiba-queue' ) ); ?>" class="<?php echo $status_filter === '' ? 'current' : ''; ?>"><?php esc_html_e( 'All', 'ai-blog-automator' ); ?></a> |</li>
 		<?php foreach ( array( 'pending', 'processing', 'completed', 'failed' ) as $st ) : ?>
@@ -64,7 +63,7 @@ $categories    = get_categories( array( 'hide_empty' => false ) );
 			<button type="button" class="button" id="aiba-bulk-apply"><?php esc_html_e( 'Apply', 'ai-blog-automator' ); ?></button>
 		</div>
 
-		<table class="widefat striped aiba-table">
+		<table class="widefat striped aiba-table aiba-table-modern">
 			<thead>
 				<tr>
 					<td class="manage-column column-cb"><input type="checkbox" id="aiba-cb-all" /></td>
@@ -109,4 +108,4 @@ $categories    = get_categories( array( 'hide_empty' => false ) );
 			</tbody>
 		</table>
 	</form>
-</div>
+<?php require AIBA_PLUGIN_DIR . 'templates/partials/shell-end.php'; ?>

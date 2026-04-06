@@ -14,10 +14,37 @@ if ( ! current_user_can( 'manage_options' ) ) {
 $users      = get_users( array( 'who' => 'authors', 'orderby' => 'display_name' ) );
 $categories = get_categories( array( 'hide_empty' => false ) );
 $types      = get_post_types( array( 'public' => true ), 'objects' );
-$detected   = AIBA_SEO_Handler::detect_seo_plugin();
+$detected = AIBA_SEO_Handler::detect_seo_plugin();
+require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 ?>
-<div class="wrap aiba-wrap">
-	<h1><?php esc_html_e( 'AI Blog Automator — Settings', 'ai-blog-automator' ); ?></h1>
+
+	<div class="aiba-card aiba-card-premium-access">
+		<?php if ( AIBA_Premium::is_active() ) : ?>
+			<div class="aiba-premium-active-banner">
+				<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
+				<div>
+					<strong><?php esc_html_e( 'Premium is active', 'ai-blog-automator' ); ?></strong>
+					<p class="description"><?php esc_html_e( 'Higher target word counts, more internal links and images, and extra queue retries are applied automatically.', 'ai-blog-automator' ); ?></p>
+				</div>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="aiba-inline-form">
+					<?php wp_nonce_field( 'aiba_premium_unlock' ); ?>
+					<input type="hidden" name="action" value="aiba_premium_unlock" />
+					<input type="hidden" name="aiba_premium_action" value="revoke" />
+					<button type="submit" class="button"><?php esc_html_e( 'Turn off premium', 'ai-blog-automator' ); ?></button>
+				</form>
+			</div>
+		<?php else : ?>
+			<h3 class="aiba-card-title"><?php esc_html_e( 'Unlock premium (one-time code)', 'ai-blog-automator' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Enter your access code to enable boosted limits across the plugin.', 'ai-blog-automator' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="aiba-premium-unlock-form">
+				<?php wp_nonce_field( 'aiba_premium_unlock' ); ?>
+				<input type="hidden" name="action" value="aiba_premium_unlock" />
+				<input type="hidden" name="aiba_premium_action" value="unlock" />
+				<input type="password" name="aiba_premium_code" class="regular-text" autocomplete="off" placeholder="<?php esc_attr_e( 'Access code', 'ai-blog-automator' ); ?>" />
+				<button type="submit" class="button button-primary"><?php esc_html_e( 'Unlock premium', 'ai-blog-automator' ); ?></button>
+			</form>
+		<?php endif; ?>
+	</div>
 
 	<h2 class="nav-tab-wrapper aiba-tabs">
 		<a href="#aiba-tab-api" class="nav-tab nav-tab-active"><?php esc_html_e( 'API', 'ai-blog-automator' ); ?></a>
@@ -326,4 +353,4 @@ $detected   = AIBA_SEO_Handler::detect_seo_plugin();
 
 		<?php submit_button(); ?>
 	</form>
-</div>
+<?php require AIBA_PLUGIN_DIR . 'templates/partials/shell-end.php'; ?>

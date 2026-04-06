@@ -57,6 +57,7 @@ class AIBA_Core {
 		require_once $dir . 'class-gemini-api.php';
 		require_once $dir . 'class-openai-api.php';
 		require_once $dir . 'class-llm-client.php';
+		require_once $dir . 'class-premium.php';
 		require_once $dir . 'class-trend-fetcher.php';
 		require_once $dir . 'class-content-generator.php';
 		require_once $dir . 'class-seo-handler.php';
@@ -193,6 +194,7 @@ class AIBA_Core {
 		add_option( 'aiba_llm_provider', 'auto' );
 		add_option( 'aiba_openai_api_key', '' );
 		add_option( 'aiba_openai_model', 'gpt-4o-mini' );
+		add_option( 'aiba_premium_unlocked', '0' );
 	}
 
 	/**

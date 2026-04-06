@@ -36,6 +36,8 @@ class AIBA_Admin_UI {
 		add_action( 'wp_ajax_aiba_queue_bulk', array( __CLASS__, 'ajax_queue_bulk' ) );
 		add_action( 'admin_post_aiba_export_logs', array( __CLASS__, 'export_logs_csv' ) );
 		add_action( 'admin_post_aiba_add_queue', array( __CLASS__, 'handle_add_queue' ) );
+		add_action( 'admin_post_aiba_premium_unlock', array( __CLASS__, 'handle_premium_unlock' ) );
+		add_filter( 'admin_body_class', array( __CLASS__, 'admin_body_class' ) );
 	}
 
 	/**
@@ -315,7 +317,7 @@ class AIBA_Admin_UI {
 		if ( ! in_array( $hook, self::plugin_page_hooks(), true ) ) {
 			return;
 		}
-		wp_enqueue_style( 'aiba-admin', AIBA_PLUGIN_URL . 'assets/css/admin.css', array(), AIBA_VERSION );
+		wp_enqueue_style( 'aiba-admin', AIBA_PLUGIN_URL . 'assets/css/admin.css', array( 'dashicons' ), AIBA_VERSION );
 		wp_enqueue_script( 'aiba-admin', AIBA_PLUGIN_URL . 'assets/js/admin.js', array( 'jquery' ), AIBA_VERSION, true );
 		wp_localize_script(
 			'aiba-admin',
@@ -329,13 +331,29 @@ class AIBA_Admin_UI {
 		);
 	}
 
+	/**
+	 * Add body class when premium is active (scoped styling).
+	 *
+	 * @param string $classes Space-separated classes.
+	 */
+	public static function admin_body_class( string $classes ): string {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( $screen && str_contains( (string) $screen->id, 'ai-blog-automator' ) && AIBA_Premium::is_active() ) {
+			$classes .= ' aiba-premium-admin';
+		}
+		return $classes;
+	}
+
 	public static function render_dashboard(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		$stats = self::get_dashboard_stats();
-		$logs  = self::get_recent_logs( 10 );
-		$queue = self::get_queue_preview( 5 );
+		$aiba_premium    = AIBA_Premium::is_active();
+		$aiba_page_title = __( 'Dashboard', 'ai-blog-automator' );
+		$aiba_page_sub   = __( 'Overview, quick actions, and recent activity', 'ai-blog-automator' );
+		$stats           = self::get_dashboard_stats();
+		$logs            = self::get_recent_logs( 10 );
+		$queue           = self::get_queue_preview( 5 );
 		include AIBA_PLUGIN_DIR . 'templates/admin-dashboard.php';
 	}
 
@@ -343,7 +361,10 @@ class AIBA_Admin_UI {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		$niche = (string) get_option( 'aiba_site_niche', '' );
+		$aiba_premium    = AIBA_Premium::is_active();
+		$aiba_page_title = __( 'Generate now', 'ai-blog-automator' );
+		$aiba_page_sub   = __( 'Run the full pipeline on a topic in one click', 'ai-blog-automator' );
+		$niche           = (string) get_option( 'aiba_site_niche', '' );
 		$trends = array();
 		if ( $niche !== '' ) {
 			$slug = substr( preg_replace( '/[^a-z0-9]+/i', '_', strtolower( $niche ) ), 0, 80 );
@@ -359,7 +380,10 @@ class AIBA_Admin_UI {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		$status = isset( $_GET['aiba_status'] ) ? sanitize_text_field( wp_unslash( $_GET['aiba_status'] ) ) : '';
+		$aiba_premium    = AIBA_Premium::is_active();
+		$aiba_page_title = __( 'Content queue', 'ai-blog-automator' );
+		$aiba_page_sub   = __( 'Scheduled and pending generation jobs', 'ai-blog-automator' );
+		$status          = isset( $_GET['aiba_status'] ) ? sanitize_text_field( wp_unslash( $_GET['aiba_status'] ) ) : '';
 		$rows   = self::get_queue_rows( $status );
 		include AIBA_PLUGIN_DIR . 'templates/admin-queue.php';
 	}
@@ -367,6 +391,18 @@ class AIBA_Admin_UI {
 	public static function render_settings(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
+		}
+		$aiba_premium    = AIBA_Premium::is_active();
+		$aiba_page_title = __( 'Settings', 'ai-blog-automator' );
+		$aiba_page_sub   = __( 'API keys, content defaults, automation, and SEO', 'ai-blog-automator' );
+		if ( isset( $_GET['aiba_premium'] ) && '1' === $_GET['aiba_premium'] ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Premium unlocked. Boosted limits are active.', 'ai-blog-automator' ) . '</p></div>';
+		}
+		if ( isset( $_GET['aiba_premium_err'] ) && '1' === $_GET['aiba_premium_err'] ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid premium access code.', 'ai-blog-automator' ) . '</p></div>';
+		}
+		if ( isset( $_GET['aiba_premium_revoked'] ) && '1' === $_GET['aiba_premium_revoked'] ) {
+			echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__( 'Premium was turned off for this site.', 'ai-blog-automator' ) . '</p></div>';
 		}
 		if ( isset( $_GET['settings-updated'] ) ) {
 			AIBA_Scheduler::reschedule_queue_event();
@@ -383,7 +419,10 @@ class AIBA_Admin_UI {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		$status = isset( $_GET['aiba_log_status'] ) ? sanitize_text_field( wp_unslash( $_GET['aiba_log_status'] ) ) : '';
+		$aiba_premium    = AIBA_Premium::is_active();
+		$aiba_page_title = __( 'Activity logs', 'ai-blog-automator' );
+		$aiba_page_sub   = __( 'API calls, queue events, and errors', 'ai-blog-automator' );
+		$status          = isset( $_GET['aiba_log_status'] ) ? sanitize_text_field( wp_unslash( $_GET['aiba_log_status'] ) ) : '';
 		$action = isset( $_GET['aiba_log_action'] ) ? sanitize_text_field( wp_unslash( $_GET['aiba_log_action'] ) ) : '';
 		$from   = isset( $_GET['aiba_from'] ) ? sanitize_text_field( wp_unslash( $_GET['aiba_from'] ) ) : '';
 		$to     = isset( $_GET['aiba_to'] ) ? sanitize_text_field( wp_unslash( $_GET['aiba_to'] ) ) : '';
@@ -575,6 +614,7 @@ class AIBA_Admin_UI {
 		$secondary  = isset( $_POST['secondary_keywords'] ) ? sanitize_text_field( wp_unslash( $_POST['secondary_keywords'] ) ) : '';
 		$category   = isset( $_POST['category_id'] ) ? (int) $_POST['category_id'] : (int) get_option( 'aiba_category_id', 0 );
 		$word_count = isset( $_POST['word_count'] ) ? (int) $_POST['word_count'] : (int) get_option( 'aiba_word_count', 1500 );
+		$word_count = max( 300, $word_count );
 		$tone       = isset( $_POST['tone'] ) ? sanitize_text_field( wp_unslash( $_POST['tone'] ) ) : (string) get_option( 'aiba_tone', 'Professional' );
 		$publish_now = ! empty( $_POST['publish_now'] );
 
@@ -809,6 +849,38 @@ class AIBA_Admin_UI {
 		);
 
 		wp_safe_redirect( admin_url( 'admin.php?page=aiba-queue&added=1' ) );
+		exit;
+	}
+
+	/**
+	 * Premium unlock / revoke (admin_post).
+	 */
+	public static function handle_premium_unlock(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Forbidden.', 'ai-blog-automator' ) );
+		}
+		check_admin_referer( 'aiba_premium_unlock' );
+
+		$do = isset( $_POST['aiba_premium_action'] ) ? sanitize_text_field( wp_unslash( $_POST['aiba_premium_action'] ) ) : '';
+		$to = admin_url( 'admin.php?page=aiba-settings' );
+
+		if ( 'revoke' === $do ) {
+			AIBA_Premium::revoke();
+			wp_safe_redirect( add_query_arg( 'aiba_premium_revoked', '1', $to ) );
+			exit;
+		}
+
+		if ( 'unlock' === $do ) {
+			$code = isset( $_POST['aiba_premium_code'] ) ? sanitize_text_field( wp_unslash( $_POST['aiba_premium_code'] ) ) : '';
+			if ( AIBA_Premium::unlock_with_code( $code ) ) {
+				wp_safe_redirect( add_query_arg( 'aiba_premium', '1', $to ) );
+			} else {
+				wp_safe_redirect( add_query_arg( 'aiba_premium_err', '1', $to ) );
+			}
+			exit;
+		}
+
+		wp_safe_redirect( $to );
 		exit;
 	}
 }

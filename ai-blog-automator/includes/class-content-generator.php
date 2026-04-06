@@ -31,10 +31,12 @@ class AIBA_Content_Generator {
 		$primary             = sanitize_text_field( (string) ( $job['primary_keyword'] ?? '' ) );
 		$secondary           = isset( $job['secondary_keywords'] ) && is_array( $job['secondary_keywords'] ) ? array_map( 'sanitize_text_field', $job['secondary_keywords'] ) : array();
 		$secondary_csv       = implode( ', ', $secondary );
-		$word_count          = max( 300, (int) ( $job['word_count'] ?? (int) get_option( 'aiba_word_count', 1500 ) ) );
-		$tone                = sanitize_text_field( (string) ( $job['tone'] ?? (string) get_option( 'aiba_tone', 'Professional' ) ) );
-		$language            = sanitize_text_field( (string) ( $job['language'] ?? (string) get_option( 'aiba_language', 'English' ) ) );
-		$images_per_post     = max( 1, (int) get_option( 'aiba_images_per_post', 3 ) );
+		$word_count      = max( 300, (int) ( $job['word_count'] ?? (int) get_option( 'aiba_word_count', 1500 ) ) );
+		$word_count      = AIBA_Premium::enhance_word_count( $word_count );
+		$tone            = sanitize_text_field( (string) ( $job['tone'] ?? (string) get_option( 'aiba_tone', 'Professional' ) ) );
+		$language        = sanitize_text_field( (string) ( $job['language'] ?? (string) get_option( 'aiba_language', 'English' ) ) );
+		$images_per_post = max( 1, (int) get_option( 'aiba_images_per_post', 3 ) );
+		$images_per_post = AIBA_Premium::enhance_images_per_post( $images_per_post );
 
 		if ( '' === $topic || '' === $primary ) {
 			return new WP_Error( 'aiba_job_invalid', __( 'Topic and primary keyword are required.', 'ai-blog-automator' ) );

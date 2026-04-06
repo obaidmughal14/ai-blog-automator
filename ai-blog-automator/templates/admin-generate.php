@@ -10,11 +10,10 @@
 defined( 'ABSPATH' ) || exit;
 
 $categories = get_categories( array( 'hide_empty' => false ) );
+require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 ?>
-<div class="wrap aiba-wrap">
-	<h1><?php esc_html_e( 'Generate Now', 'ai-blog-automator' ); ?></h1>
 
-	<form id="aiba-generate-form" class="aiba-form">
+	<form id="aiba-generate-form" class="aiba-form aiba-form-card">
 		<table class="form-table">
 			<tr>
 				<th scope="row"><label for="aiba_gen_topic"><?php esc_html_e( 'Topic', 'ai-blog-automator' ); ?></label></th>
@@ -86,7 +85,7 @@ $categories = get_categories( array( 'hide_empty' => false ) );
 		</p>
 	</form>
 
-	<div id="aiba-gen-progress" class="aiba-progress" hidden>
+	<div id="aiba-gen-progress" class="aiba-progress aiba-form-card" hidden>
 		<ol>
 			<li class="aiba-step" data-step="outline"><?php esc_html_e( 'Outline & sections', 'ai-blog-automator' ); ?></li>
 			<li class="aiba-step" data-step="assemble"><?php esc_html_e( 'Assemble & save post', 'ai-blog-automator' ); ?></li>
@@ -94,4 +93,4 @@ $categories = get_categories( array( 'hide_empty' => false ) );
 		</ol>
 		<p id="aiba-gen-result"></p>
 	</div>
-</div>
+<?php require AIBA_PLUGIN_DIR . 'templates/partials/shell-end.php'; ?>

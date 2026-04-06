@@ -28,6 +28,7 @@ class AIBA_Internal_Linker {
 	 */
 	public function inject_internal_links( string $content, int $current_post_id, string $primary_keyword, string $topic = '' ): string {
 		$max = max( 1, (int) get_option( 'aiba_max_internal_links', 5 ) );
+		$max = AIBA_Premium::enhance_max_internal_links( $max );
 
 		$existing_posts = get_posts(
 			array(

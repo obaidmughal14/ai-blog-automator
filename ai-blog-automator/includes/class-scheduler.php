@@ -95,6 +95,7 @@ class AIBA_Scheduler {
 		);
 
 		$max_retries = max( 0, (int) get_option( 'aiba_max_retries', 3 ) );
+		$max_retries = AIBA_Premium::enhance_max_retries( $max_retries );
 		$attempt     = 0;
 		$last_error  = '';
 

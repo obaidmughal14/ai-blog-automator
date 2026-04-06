@@ -9,12 +9,10 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$base = admin_url( 'admin.php?page=aiba-logs' );
+require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 ?>
-<div class="wrap aiba-wrap">
-	<h1><?php esc_html_e( 'Logs', 'ai-blog-automator' ); ?></h1>
 
-	<form method="get" class="aiba-form aiba-filters">
+	<form method="get" class="aiba-form aiba-filters aiba-form-card">
 		<input type="hidden" name="page" value="aiba-logs" />
 		<label>
 			<?php esc_html_e( 'Status', 'ai-blog-automator' ); ?>
@@ -45,7 +43,8 @@ $base = admin_url( 'admin.php?page=aiba-logs' );
 		<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=aiba_export_logs' ), 'aiba_export_logs' ) ); ?>"><?php esc_html_e( 'Export CSV', 'ai-blog-automator' ); ?></a>
 	</p>
 
-	<table class="widefat striped aiba-table">
+	<h2 class="aiba-section-title"><?php esc_html_e( 'Log entries', 'ai-blog-automator' ); ?></h2>
+	<table class="widefat striped aiba-table aiba-table-modern">
 		<thead>
 			<tr>
 				<th><?php esc_html_e( 'ID', 'ai-blog-automator' ); ?></th>
@@ -73,4 +72,4 @@ $base = admin_url( 'admin.php?page=aiba-logs' );
 			<?php endif; ?>
 		</tbody>
 	</table>
-</div>
+<?php require AIBA_PLUGIN_DIR . 'templates/partials/shell-end.php'; ?>
