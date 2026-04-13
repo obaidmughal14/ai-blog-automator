@@ -16,6 +16,7 @@ Run this before each Envato / major release.
 
 - [ ] Only `wp_remote_get` / `wp_remote_post` (or WP HTTP API), not raw `curl` to user-supplied hosts without validation.
 - [ ] Custom LLM URL: ensure only `http`/`https` schemes if you add stricter validation later.
+- [ ] `docs/SECURITY.md` matches current behaviour (timeouts, rate limits, filters).
 
 ## Assets
 

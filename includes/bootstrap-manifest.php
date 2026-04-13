@@ -17,6 +17,7 @@ return array(
 	'class-premium.php',
 	'class-frontend-demo.php',
 	'class-onboarding.php',
+	'class-environment.php',
 	'class-trend-fetcher.php',
 	'class-content-generator.php',
 	'class-seo-handler.php',

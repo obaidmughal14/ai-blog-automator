@@ -18,6 +18,9 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 	<?php if ( isset( $_GET['aiba_feedback_err'] ) && '1' === (string) wp_unslash( $_GET['aiba_feedback_err'] ) ) : ?>
 		<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Please enter a longer message (at least 10 characters) and try again.', 'ai-blog-automator' ); ?></p></div>
 	<?php endif; ?>
+	<?php if ( isset( $_GET['aiba_feedback_rl'] ) && '1' === (string) wp_unslash( $_GET['aiba_feedback_rl'] ) ) : ?>
+		<div class="notice notice-warning is-dismissible"><p><?php esc_html_e( 'You have reached the hourly feedback submission limit for your account. Please try again later.', 'ai-blog-automator' ); ?></p></div>
+	<?php endif; ?>
 
 	<div class="aiba-card">
 		<h2 class="aiba-section-title"><?php esc_html_e( 'Send feedback', 'ai-blog-automator' ); ?></h2>

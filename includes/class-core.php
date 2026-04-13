@@ -50,6 +50,7 @@ class AIBA_Core {
 		AIBA_SEO_Handler::init();
 		AIBA_Scheduler::init();
 		AIBA_Frontend_Demo::init();
+		AIBA_Environment::init();
 		AIBA_Onboarding::init();
 		if ( function_exists( 'is_admin' ) && is_admin() ) {
 			AIBA_Admin_UI::init();
@@ -85,6 +86,7 @@ class AIBA_Core {
 				'class-premium.php',
 				'class-frontend-demo.php',
 				'class-onboarding.php',
+				'class-environment.php',
 				'class-trend-fetcher.php',
 				'class-content-generator.php',
 				'class-seo-handler.php',

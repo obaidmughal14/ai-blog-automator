@@ -603,6 +603,11 @@ class AIBA_Admin_UI {
 		}
 		check_admin_referer( 'aiba_feedback_submit' );
 
+		if ( ! AIBA_Environment::rate_limit_allow( 'feedback', get_current_user_id(), 8, 3600 ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=aiba-feedback&aiba_feedback_rl=1' ) );
+			exit;
+		}
+
 		$message = isset( $_POST['aiba_feedback_message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['aiba_feedback_message'] ) ) : '';
 		if ( strlen( $message ) < 10 ) {
 			wp_safe_redirect( admin_url( 'admin.php?page=aiba-feedback&aiba_feedback_err=1' ) );
@@ -917,6 +922,20 @@ class AIBA_Admin_UI {
 
 		$sec_arr = array_filter( array_map( 'trim', explode( ',', $secondary ) ) );
 
+		if ( $topic === '' || $primary === '' ) {
+			wp_send_json_error( array( 'message' => __( 'Topic and primary keyword are required.', 'ai-blog-automator' ) ) );
+		}
+
+		$rl = AIBA_Environment::generate_rate_limit_params();
+		if ( ! AIBA_Environment::rate_limit_allow( 'gen', get_current_user_id(), $rl['max'], $rl['window'] ) ) {
+			wp_send_json_error(
+				array(
+					'code'    => 'client_rl',
+					'message' => __( 'Too many generate requests in a short period. Please wait a minute and try again.', 'ai-blog-automator' ),
+				)
+			);
+		}
+
 		$job = array(
 			'topic'                => $topic,
 			'primary_keyword'      => $primary,
@@ -929,64 +948,73 @@ class AIBA_Admin_UI {
 			'article_template'     => $tpl,
 		);
 
-		$article = AIBA_Core::content_generator()->generate_article( $job );
-		if ( is_wp_error( $article ) ) {
-			$err_msg = $article->get_error_message();
-			if ( AIBA_LLM_Client::is_rate_limit_error( $article ) ) {
-				AIBA_Core::log( 0, 'generate', 'warning', $err_msg );
-				wp_send_json_error(
-					array(
-						'code'    => 'rate_limit',
-						'message' => __( 'LLM quota or rate limit reached. Wait and retry, check provider billing, add fallback API keys under Settings → API, or slow the queue. Nothing was saved.', 'ai-blog-automator' ),
-					)
-				);
+		try {
+			$article = AIBA_Core::content_generator()->generate_article( $job );
+			if ( is_wp_error( $article ) ) {
+				$err_msg = $article->get_error_message();
+				if ( AIBA_LLM_Client::is_rate_limit_error( $article ) ) {
+					AIBA_Core::log( 0, 'generate', 'warning', $err_msg );
+					wp_send_json_error(
+						array(
+							'code'    => 'rate_limit',
+							'message' => __( 'LLM quota or rate limit reached. Wait and retry, check provider billing, add fallback API keys under Settings → API, or slow the queue. Nothing was saved.', 'ai-blog-automator' ),
+						)
+					);
+				}
+				AIBA_Core::log( 0, 'generate', 'error', $err_msg );
+				wp_send_json_error( array( 'message' => $err_msg ) );
 			}
-			AIBA_Core::log( 0, 'generate', 'error', $err_msg );
-			wp_send_json_error( array( 'message' => $err_msg ) );
+
+			$settings = array(
+				'author_id'      => (int) get_option( 'aiba_author_id', get_current_user_id() ),
+				'category_id'    => $primary_cat,
+				'category_ids'   => $cat_ids,
+				'auto_publish'   => $publish_now,
+				'publish_status' => $publish_now ? 'publish' : (string) get_option( 'aiba_publish_status', 'draft' ),
+				'scheduled_time' => null,
+				'topic'          => $topic,
+			);
+
+			$post_id = AIBA_Core::post_publisher()->publish_post( $article, $settings );
+			if ( is_wp_error( $post_id ) ) {
+				AIBA_Core::log( 0, 'publish', 'error', $post_id->get_error_message() );
+				wp_send_json_error( array( 'message' => $post_id->get_error_message() ) );
+			}
+
+			$p = get_post( $post_id );
+			if ( ! $p instanceof WP_Post ) {
+				AIBA_Core::log( $post_id, 'publish', 'error', 'Post missing after publish.' );
+				wp_send_json_error( array( 'message' => __( 'Post was created but could not be loaded for the response.', 'ai-blog-automator' ) ) );
+			}
+
+			$score = AIBA_SEO_Handler::calculate_seo_score(
+				(string) $p->post_content,
+				(string) ( $article['primary_keyword'] ?? '' ),
+				(string) $p->post_title,
+				(string) ( $article['meta_description'] ?? '' )
+			);
+
+			$edit_url = get_edit_post_link( $post_id, 'raw' );
+			if ( ! is_string( $edit_url ) || $edit_url === '' ) {
+				$edit_url = admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' );
+			}
+
+			wp_send_json_success(
+				array(
+					'post_id'   => $post_id,
+					'post_url'  => $edit_url,
+					'view_url'  => get_permalink( $post_id ) ?: '',
+					'seo_score' => $score,
+				)
+			);
+		} catch ( \Throwable $e ) {
+			AIBA_Core::log( 0, 'generate', 'error', $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine() );
+			wp_send_json_error(
+				array(
+					'message' => __( 'An unexpected error occurred during generation. Check Activity logs and your hosting PHP error log.', 'ai-blog-automator' ),
+				)
+			);
 		}
-
-		$settings = array(
-			'author_id'      => (int) get_option( 'aiba_author_id', get_current_user_id() ),
-			'category_id'    => $primary_cat,
-			'category_ids'   => $cat_ids,
-			'auto_publish'   => $publish_now,
-			'publish_status' => $publish_now ? 'publish' : (string) get_option( 'aiba_publish_status', 'draft' ),
-			'scheduled_time' => null,
-			'topic'          => $topic,
-		);
-
-		$post_id = AIBA_Core::post_publisher()->publish_post( $article, $settings );
-		if ( is_wp_error( $post_id ) ) {
-			AIBA_Core::log( 0, 'publish', 'error', $post_id->get_error_message() );
-			wp_send_json_error( array( 'message' => $post_id->get_error_message() ) );
-		}
-
-		$p = get_post( $post_id );
-		if ( ! $p instanceof WP_Post ) {
-			AIBA_Core::log( $post_id, 'publish', 'error', 'Post missing after publish.' );
-			wp_send_json_error( array( 'message' => __( 'Post was created but could not be loaded for the response.', 'ai-blog-automator' ) ) );
-		}
-
-		$score = AIBA_SEO_Handler::calculate_seo_score(
-			(string) $p->post_content,
-			(string) ( $article['primary_keyword'] ?? '' ),
-			(string) $p->post_title,
-			(string) ( $article['meta_description'] ?? '' )
-		);
-
-		$edit_url = get_edit_post_link( $post_id, 'raw' );
-		if ( ! is_string( $edit_url ) || $edit_url === '' ) {
-			$edit_url = admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' );
-		}
-
-		wp_send_json_success(
-			array(
-				'post_id'   => $post_id,
-				'post_url'  => $edit_url,
-				'view_url'  => get_permalink( $post_id ) ?: '',
-				'seo_score' => $score,
-			)
-		);
 	}
 
 	public static function ajax_test_apis(): void {
@@ -1106,7 +1134,7 @@ class AIBA_Admin_UI {
 		}
 
 		$action = isset( $_POST['bulk_action'] ) ? sanitize_text_field( wp_unslash( $_POST['bulk_action'] ) ) : '';
-		$ids    = isset( $_POST['ids'] ) && is_array( $_POST['ids'] ) ? array_map( 'intval', $_POST['ids'] ) : array();
+		$ids    = isset( $_POST['ids'] ) && is_array( $_POST['ids'] ) ? array_map( 'intval', wp_unslash( $_POST['ids'] ) ) : array();
 		$ids    = array_filter( $ids );
 
 		global $wpdb;

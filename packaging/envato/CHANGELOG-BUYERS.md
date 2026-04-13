@@ -1,5 +1,12 @@
 # Changelog (buyer-facing)
 
+## 2.0.15
+
+- Longer **HTTP timeouts** for known LLM and image API hosts (fewer cURL 28 timeouts on slow providers).
+- **Admin notices** if recommended PHP extensions (cURL, DOM, mbstring) are missing; PHP 8.0+ is enforced in code paths that load the full stack.
+- **Rate limits** on manual Generate and on Feedback (per administrator) to reduce accidental overload and abuse.
+- **Generate** validates required fields and wraps the pipeline in a safety net so rare PHP errors surface as a logged message instead of breaking the AJAX response.
+
 ## 2.0.14
 
 - Clearer **Generate** errors when the server returns HTML or times out; longer default PHP time budget for generation.

@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation, content, openai
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.0.14
+Stable tag: 2.0.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,7 @@ Full administrator documentation ships with the plugin:
 
 * `docs/USER-GUIDE.html` — Open in a browser for a **styled guide with SVG figures** (sidebar, API settings, queue bulk, generate flow, pipeline diagram).
 * `docs/USER-GUIDE.txt` — Same material as **plain text**, with paths to the same figures for offline reading.
+* `docs/SECURITY.md` — **Security model**, data handling, and filters for advanced sites (Envato / enterprise review).
 * **Upgrade / Feedback** — Under **AI Automator** in wp-admin: purchase and premium help on **Upgrade**; product feedback on **Feedback** (also linked in the hero bar on every plugin screen).
 * **Marketing shortcode** — `[aiba_product_demo]` outputs a feature block for your public product page (see **Upgrade** screen in the plugin for the exact snippet).
 * **CodeCanyon pack** — `packaging/envato/` contains listing HTML, installation, credits, privacy, support template, screenshot checklist, and zip build notes for authors.
@@ -84,9 +85,16 @@ Illustrations ship as **SVG** files in `docs/images/` (open beside the HTML guid
 
 == Upgrade Notice ==
 
+2.0.15 adds per-admin rate limits on Generate and Feedback; adjust `aiba_generate_rate_limit` if your workflow needs more throughput. See `docs/SECURITY.md` for details.
+
 If you previously relied on Unsplash without a Pexels key, add an **Unsplash Access Key** under Settings → API. Review `docs/USER-GUIDE.html` for image and queue behaviour changes in recent releases.
 
 == Changelog ==
+
+= 2.0.15 =
+* **Environment & reliability:** `AIBA_Environment` extends outbound HTTP timeouts for LLM and stock-image hosts (filter `aiba_outbound_api_timeout_seconds`), surfaces PHP extension notices on plugin admin screens, and documents requirements.
+* **Abuse prevention:** per-admin sliding-window rate limits on **Generate** (AJAX) and **Feedback** submissions (tunable via `aiba_generate_rate_limit`).
+* **Hardening:** Generate requires topic + primary keyword; bulk queue IDs use `wp_unslash`; unexpected throwables during generation are caught, logged, and returned as a safe JSON error.
 
 = 2.0.14 =
 * Generate (AJAX): parse responses as text first so PHP errors, timeouts, or HTML from the server show a useful snippet instead of only “Request failed (network or server).”

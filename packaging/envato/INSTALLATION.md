@@ -37,6 +37,8 @@ Open in a browser (from the plugin folder on the server or locally from the zip)
 
 Plain text variant: `docs/USER-GUIDE.txt`.
 
+Security and data handling (for IT review): `docs/SECURITY.md`.
+
 ## 7. Premium unlock (optional)
 
 If you purchased premium access:
