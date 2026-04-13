@@ -13,6 +13,13 @@ defined( 'ABSPATH' ) || exit;
 class AIBA_Core {
 
 	/**
+	 * Prevent duplicate hook registration if the bootstrap runs twice in one request.
+	 *
+	 * @var bool
+	 */
+	private static bool $plugin_booted = false;
+
+	/**
 	 * Whether all PHP includes were loaded.
 	 *
 	 * @var bool
@@ -27,11 +34,14 @@ class AIBA_Core {
 	private static array $services = array();
 
 	/**
-	 * Initialize plugin.
+	 * Initialize plugin (idempotent).
 	 */
 	public static function init(): void {
-		// Single code path: always load the full stack when the plugin boots.
-		// Conditional loading caused fatals when cron or other hooks ran without LLM classes loaded.
+		if ( self::$plugin_booted ) {
+			return;
+		}
+		self::$plugin_booted = true;
+
 		self::load_full_includes();
 		add_action( 'init', array( __CLASS__, 'maybe_upgrade_db' ), 5 );
 		add_action( 'init', array( __CLASS__, 'load_textdomain' ) );
@@ -58,23 +68,35 @@ class AIBA_Core {
 		if ( self::$full_includes_loaded ) {
 			return;
 		}
-		$dir = AIBA_PLUGIN_DIR . 'includes/';
-		require_once $dir . 'class-gemini-api.php';
-		require_once $dir . 'class-openai-api.php';
-		require_once $dir . 'class-anthropic-api.php';
-		require_once $dir . 'class-custom-llm-api.php';
-		require_once $dir . 'class-llm-templates.php';
-		require_once $dir . 'class-llm-client.php';
-		require_once $dir . 'class-premium.php';
-		require_once $dir . 'class-trend-fetcher.php';
-		require_once $dir . 'class-content-generator.php';
-		require_once $dir . 'class-seo-handler.php';
-		require_once $dir . 'class-image-handler.php';
-		require_once $dir . 'class-internal-linker.php';
-		require_once $dir . 'class-post-publisher.php';
-		require_once $dir . 'class-google-indexing.php';
-		require_once $dir . 'class-scheduler.php';
-		require_once $dir . 'class-admin-ui.php';
+		$dir         = AIBA_PLUGIN_DIR . 'includes/';
+		$manifest    = $dir . 'bootstrap-manifest.php';
+		$class_files = file_exists( $manifest ) ? require $manifest : array();
+
+		if ( ! is_array( $class_files ) || array() === $class_files ) {
+			$class_files = array(
+				'class-gemini-api.php',
+				'class-openai-api.php',
+				'class-anthropic-api.php',
+				'class-custom-llm-api.php',
+				'class-llm-templates.php',
+				'class-llm-client.php',
+				'class-premium.php',
+				'class-trend-fetcher.php',
+				'class-content-generator.php',
+				'class-seo-handler.php',
+				'class-image-handler.php',
+				'class-internal-linker.php',
+				'class-post-publisher.php',
+				'class-google-indexing.php',
+				'class-scheduler.php',
+				'class-admin-ui.php',
+			);
+		}
+
+		foreach ( $class_files as $file ) {
+			require_once $dir . $file;
+		}
+
 		self::$full_includes_loaded = true;
 	}
 
@@ -114,14 +136,20 @@ class AIBA_Core {
 	 */
 	public static function map_queue_frequency_to_recurrence( $freq ): string {
 		$freq = is_string( $freq ) ? $freq : (string) $freq;
-		return match ( $freq ) {
-			'2hr' => 'aiba_every_2_hours',
-			'3hr' => 'aiba_every_3_hours',
-			'6hr' => 'aiba_every_6_hours',
-			'12hr' => 'aiba_every_12_hours',
-			'custom' => 'aiba_queue_custom',
-			default => 'aiba_daily',
-		};
+		switch ( $freq ) {
+			case '2hr':
+				return 'aiba_every_2_hours';
+			case '3hr':
+				return 'aiba_every_3_hours';
+			case '6hr':
+				return 'aiba_every_6_hours';
+			case '12hr':
+				return 'aiba_every_12_hours';
+			case 'custom':
+				return 'aiba_queue_custom';
+			default:
+				return 'aiba_daily';
+		}
 	}
 
 	/**
@@ -147,9 +175,14 @@ class AIBA_Core {
 	}
 
 	/**
+	 * @param mixed $json Stored JSON string or empty from DB.
 	 * @return array<int, int>
 	 */
-	public static function decode_queue_category_ids( string $json ): array {
+	public static function decode_queue_category_ids( $json ): array {
+		if ( null === $json || false === $json ) {
+			return array();
+		}
+		$json = is_string( $json ) ? $json : '';
 		if ( '' === trim( $json ) ) {
 			return array();
 		}

@@ -2,9 +2,9 @@
 Contributors: yourname
 Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
-Tested up to: 6.4
+Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 1.1.4
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,13 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 2.0.0 =
+* Rebuilt bootstrap: boot on `plugins_loaded` for normal loads, or immediately when the plugin file is included after `plugins_loaded` (activation sandbox and similar), so hooks always register reliably.
+* Added `includes/bootstrap-manifest.php` as the single ordered list of class files loaded by `AIBA_Core::load_full_includes()`.
+* Idempotent `AIBA_Core::init()` guard prevents duplicate hook registration if bootstrap runs twice in one request.
+* Replaced `match` with `switch` for queue recurrence mapping; relaxed `decode_queue_category_ids()` input handling for bad DB values.
+* Version 2.0.0 — recommended full reinstall or upload of this zip if a previous build left the site in recovery mode.
 
 = 1.1.4 =
 * Fix: restore a single full bootstrap on `AIBA_Core::init()` so front-end, admin, and cron never run with only a partial class set (this caused critical errors when the queue or trends cron fired).
