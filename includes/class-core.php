@@ -138,12 +138,13 @@ class AIBA_Core {
 	 * @param bool $network_wide Multisite: whether the plugin was network-activated (WordPress passes this).
 	 */
 	public static function activate( $network_wide = false ): void {
-		self::load_full_includes();
+		// Activation must stay lean: avoid loading LLM/API/admin classes here (sandbox + low memory hosts).
+		require_once AIBA_PLUGIN_DIR . 'includes/class-scheduler.php';
 		self::apply_db_schema();
 		update_option( 'aiba_db_schema', 3 );
 		self::add_default_options();
 		AIBA_Scheduler::register_cron_schedules_filter();
-		$recurrence = self::map_queue_frequency_to_recurrence( get_option( 'aiba_queue_frequency', 'daily' ) );
+		$recurrence = self::map_queue_frequency_to_recurrence( (string) get_option( 'aiba_queue_frequency', 'daily' ) );
 		if ( ! wp_next_scheduled( 'aiba_process_queue' ) ) {
 			wp_schedule_event( time() + 60, $recurrence, 'aiba_process_queue' );
 		}
@@ -158,7 +159,8 @@ class AIBA_Core {
 	 * @param string $freq Frequency slug.
 	 * @return string
 	 */
-	public static function map_queue_frequency_to_recurrence( string $freq ): string {
+	public static function map_queue_frequency_to_recurrence( $freq ): string {
+		$freq = is_string( $freq ) ? $freq : (string) $freq;
 		return match ( $freq ) {
 			'2hr' => 'aiba_every_2_hours',
 			'3hr' => 'aiba_every_3_hours',

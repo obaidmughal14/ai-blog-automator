@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,11 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 1.1.3 =
+* Fix: lean activation path (database, default options, cron schedules only) so activating the plugin no longer loads the full LLM/API stack during WordPress’s activation sandbox.
+* Fix: skip `AIBA_Core::init()` while `WP_SANDBOX_SCRAPING` is set to avoid boot hooks during the pre-activation scrape.
+* Hardening: `map_queue_frequency_to_recurrence()` accepts non-string option values from the database without throwing a type error.
 
 = 1.1.2 =
 * Performance: load a minimal PHP stack on public front-end requests; full stack on admin, cron, CLI, activation sandbox, or when generation APIs run.
