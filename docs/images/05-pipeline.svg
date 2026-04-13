@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="200" viewBox="0 0 760 200" role="img" aria-labelledby="t5">
+  <title id="t5">Automation pipeline from queue to published post</title>
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#50575e"/>
+    </marker>
+  </defs>
+  <rect width="760" height="200" fill="#fafafa"/>
+  <rect x="20" y="70" width="120" height="60" rx="6" fill="#fff" stroke="#2271b1" stroke-width="2"/>
+  <text x="80" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" fill="#1d2327">Queue</text>
+  <line x1="140" y1="100" x2="175" y2="100" stroke="#50575e" stroke-width="2" marker-end="url(#ar)"/>
+  <rect x="180" y="70" width="120" height="60" rx="6" fill="#fff" stroke="#2271b1" stroke-width="2"/>
+  <text x="240" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" fill="#1d2327">Cron / Process</text>
+  <line x1="300" y1="100" x2="335" y2="100" stroke="#50575e" stroke-width="2" marker-end="url(#ar)"/>
+  <rect x="340" y="70" width="120" height="60" rx="6" fill="#fff" stroke="#2271b1" stroke-width="2"/>
+  <text x="400" y="102" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" fill="#1d2327">LLM</text>
+  <text x="400" y="118" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" fill="#1d2327">generation</text>
+  <line x1="460" y1="100" x2="495" y2="100" stroke="#50575e" stroke-width="2" marker-end="url(#ar)"/>
+  <rect x="500" y="70" width="120" height="60" rx="6" fill="#fff" stroke="#00a32a" stroke-width="2"/>
+  <text x="560" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" fill="#1d2327">WordPress post</text>
+  <line x1="620" y1="100" x2="655" y2="100" stroke="#50575e" stroke-width="2" marker-end="url(#ar)"/>
+  <rect x="660" y="70" width="80" height="60" rx="6" fill="#fff" stroke="#8c8f94" stroke-width="2"/>
+  <text x="700" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" fill="#1d2327">SEO / Index</text>
+  <text x="380" y="40" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" font-weight="600" fill="#1d2327">High-level flow</text>
+</svg>

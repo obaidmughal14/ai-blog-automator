@@ -1,0 +1,281 @@
+================================================================================
+  AI BLOG AUTOMATOR — COMPLETE USER GUIDE (TEXT)
+  Version aligned with plugin stable tag. Open USER-GUIDE.html in a browser
+  for the same content with styling and inline figures.
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1. What this plugin does
+2. Requirements and API keys
+3. Installation and activation
+4. Admin menu overview (figure)
+5. Settings in detail
+6. Generating a single post
+7. Queue: one row and bulk month-style import
+8. Automation, cron, and publish behaviour
+9. Images (featured and in-article)
+10. SEO integration (Yoast, Rank Math, AIOSEO, native)
+11. Internal links and placeholders
+12. Activity logs and diagnostics
+13. Uninstall and data removal
+14. Troubleshooting
+15. Figure index (SVG files in docs/images/)
+
+
+1. WHAT THIS PLUGIN DOES
+-------------------------
+AI Blog Automator connects WordPress to large language models (Gemini by
+default, with optional OpenAI, Anthropic Claude, and custom OpenAI-compatible
+endpoints). It can:
+
+  • Build long-form article HTML from a topic and keywords.
+  • Add FAQ blocks, schema-friendly markup, and optional JSON-LD.
+  • Attach a featured image and in-article images via Pexels and/or Unsplash.
+  • Suggest internal links to your published posts and pages.
+  • Write SEO title and meta description fields for supported SEO plugins or
+    native fallbacks.
+  • Optionally notify Google’s Indexing API when posts go live.
+
+You control automation through Settings, run one-off articles from Generate,
+and scale with the Queue (including bulk paste for many titles at once).
+
+
+2. REQUIREMENTS AND API KEYS
+----------------------------
+  • WordPress 6.0 or newer, PHP 8.0 or newer.
+  • At least one working LLM API key (Gemini recommended in Auto mode).
+  • For images: a Pexels API key and/or an Unsplash Access Key (Unsplash
+    “Source” URLs are retired; the plugin uses official APIs).
+  • Optional: Google service account JSON for the Indexing API (Search Console).
+
+Keep keys in wp-config.php constants only if you prefer not to store them in
+the database; otherwise use Settings → API (stored as WordPress options).
+
+
+3. INSTALLATION AND ACTIVATION
+-----------------------------
+  a) Copy the entire plugin folder into:
+        wp-content/plugins/ai-blog-automator/
+     (or your chosen folder name — the main file must remain
+      ai-blog-automator.php at the root of that folder.)
+
+  b) In wp-admin go to Plugins → Installed Plugins.
+
+  c) Click “Activate” on AI Blog Automator.
+
+  d) On activation the plugin creates database tables for the queue and
+     logging (if not already present) and registers cron hooks according to
+     your Automation settings.
+
+  e) Open AI Automator → Settings and save at least once after entering keys.
+
+
+4. ADMIN MENU OVERVIEW (FIGURE)
+-------------------------------
+Figure file (open in any browser or image viewer):
+
+  docs/images/01-admin-menu.svg
+
+This diagram shows where “AI Automator” appears in the WordPress admin
+sidebar. Submenus typically include:
+
+  • Dashboard — overview and quick actions (if present in your build).
+  • Settings — API keys, content defaults, prompts, automation, SEO.
+  • Generate — single-article form with AJAX generation.
+  • Queue — pending jobs, bulk add, filters by status.
+  • Activity logs — pipeline errors and successes.
+
+Exact labels may match your translation file; the position is under the main
+admin menu as a top-level item.
+
+
+5. SETTINGS IN DETAIL
+---------------------
+Figure (API keys layout):
+
+  docs/images/02-settings-api.svg
+
+5.1 API tab
+  • Gemini API key — primary provider for many installs. Get a key from
+    Google AI Studio. “Auto” provider mode can fall back to OpenAI or Claude
+    when rate limits hit, if those keys are filled in.
+  • OpenAI / Anthropic / Custom — optional; fill models as documented on
+    each provider’s site.
+  • Pexels API key — optional but strongly recommended for stock photos without
+    extra Unsplash setup.
+  • Unsplash Access Key — optional; create an application at
+    unsplash.com/oauth/applications and paste the “Access Key”.
+  • Google service account JSON — only if you use the Indexing API.
+
+Use “Test API connections” (bottom of API tab) to verify Gemini, optional
+providers, Pexels, Unsplash, and indexing credentials.
+
+5.2 Content tab
+  • Site niche, default word count, tone, language, default author, default
+    categories for new posts, images per post, internal link cap, etc.
+
+5.3 Prompts & formats
+  • Article format template (standard, how-to, listicle, etc.).
+  • Optional prefix/suffix for outline and section prompts, plus a global
+    append string appended to prompts.
+
+5.4 Automation
+  • Posts per day cap, publish time, publish status (draft vs publish vs
+    scheduled), queue recurrence (hourly, daily, custom minutes, etc.).
+  • Cron-driven queue processing depends on site traffic; for low traffic,
+    use a real cron URL or Action Scheduler–friendly hosting.
+
+5.5 SEO
+  • Choose detected SEO plugin vs native meta output.
+  • Toggle FAQ / Article schema output where supported.
+
+5.6 Advanced
+  • Logging retention, disabled post types for front-end meta, etc.
+
+
+6. GENERATING A SINGLE POST
+----------------------------
+Figure:
+
+  docs/images/04-generate-flow.svg
+
+Steps:
+  1) Go to AI Automator → Generate.
+  2) Enter a clear topic/title and a primary focus keyword.
+  3) Add optional secondary keywords and categories if the form exposes them.
+  4) Click the Generate button and wait for the AJAX pipeline to finish.
+  5) Open the linked draft in the editor; review facts, links, and images.
+
+The plugin creates a WordPress post, runs image sideloading, internal link
+injection, and SEO meta according to your Settings. Always fact-check
+AI-generated claims and URLs before publishing.
+
+
+7. QUEUE: ONE ROW AND BULK MONTH-STYLE IMPORT
+---------------------------------------------
+Figure:
+
+  docs/images/03-queue-bulk.svg
+
+7.1 Single row
+  Use “Add to queue” with topic, primary keyword, optional “other keywords”
+  (comma or line separated), categories, and article format. Each row is a
+  future job for the scheduler or manual “Process queue”.
+
+7.2 Bulk paste (spreadsheet friendly)
+  Each non-empty line is one queue item. Preferred formats:
+
+  TAB-SEPARATED (paste from Excel / Google Sheets):
+    Column A: Title
+    Column B: Focus keyphrase
+    Column C: Other keywords (commas or semicolons inside the cell)
+    Column D: Category term IDs, comma-separated (optional)
+    Column E: Article format slug (optional; falls back to default)
+
+  PIPE-SEPARATED (one line):
+    Title|focus|kw1, kw2|12,5|how-to
+
+  Legacy lines still work:
+    Title only  →  topic and keyword both set to that text.
+    Title|keyword
+
+  Staggering:
+    Choose “One job per day” or “One job per week”, set a start date; the
+    plugin assigns scheduled_at per line using your Automation “Publish time”.
+
+7.3 Processing
+  Figure (high-level automation):
+
+    docs/images/05-pipeline.svg
+
+  Cron or manual processing picks pending rows, calls the LLM, publishes via
+  the post publisher, then marks the queue row completed or failed. Check
+  Activity logs if a row stays pending or fails.
+
+
+8. AUTOMATION, CRON, AND PUBLISH BEHAVIOUR
+-----------------------------------------
+  • WordPress pseudo-cron triggers on visits; for reliable queue runs use
+    system cron hitting wp-cron.php or a managed host feature.
+  • “Publish status” and “Auto publish” decide whether new posts are drafts,
+    published immediately, or scheduled for the datetime on the queue row.
+  • Scheduled queue rows pass their datetime into the publisher when the job
+    runs so WordPress can set post_date for future posts where applicable.
+
+
+9. IMAGES (FEATURED AND IN-ARTICLE)
+----------------------------------
+  • Order of attempt: Pexels (if key set), then Unsplash API (if Access Key).
+  • Without both keys, featured and inline images may fail; the activity log
+    records errors.
+  • Stock photos include caption/credit metadata where the API provides it.
+  • Google Image scraping is not supported (legal and technical reasons).
+
+
+10. SEO INTEGRATION (YOAST, RANK MATH, AIOSEO, NATIVE)
+------------------------------------------------------
+  • Focus / primary keyword is written to the active SEO plugin’s main field
+    when empty (or forced where implemented).
+  • Secondary keywords are mapped to Yoast synonyms (and Yoast Premium
+    related keyphrases when Premium is active), Rank Math additional keywords
+    meta when applicable, AIOSEO combined keyword string, or native
+    _aiba_secondary_keywords.
+  • JSON-LD for Article and FAQ is stored in post meta and output on the
+    front end when enabled and the theme does not strip it.
+
+
+11. INTERNAL LINKS AND PLACEHOLDERS
+------------------------------------
+During generation the model may emit machine tokens such as:
+
+  [INTERNAL_LINK_PLACEHOLDER: anchor phrase]
+
+The internal linker replaces every variant (including missing anchor text)
+with a real <a href="..."> link to a relevant post or page, or a sensible
+fallback (e.g. blog index). You should not see raw INTERNAL_LINK_PLACEHOLDER
+text in published HTML after processing.
+
+
+12. ACTIVITY LOGS AND DIAGNOSTICS
+---------------------------------
+  Open AI Automator → Activity logs (or equivalent) to read pipeline
+  messages: LLM failures, image download errors, indexing responses, queue
+  errors. Use timestamps and messages to fix API keys, quotas, or hosting
+  blocks (e.g. allow_url_fopen / outbound HTTP).
+
+
+13. UNINSTALL AND DATA REMOVAL
+------------------------------
+  If the plugin’s uninstall routine is configured to remove data on delete,
+  queue tables and options may be removed when the plugin is deleted through
+  WordPress. Back up your site before uninstalling in production.
+
+
+14. TROUBLESHOOTING
+-------------------
+  • Blank Generate screen: hard-refresh; check browser console for script
+    errors; ensure you are on the correct admin.php?page=... screen.
+  • 429 / rate limit: reduce posts per day, word count, or add more API keys
+    in Auto mode.
+  • No images: add Pexels and/or Unsplash keys; confirm “Test API connections”.
+  • Queue not moving: verify WP-Cron or real cron; check Activity logs.
+  • SEO fields empty: confirm SEO plugin mode under Settings → SEO; save a
+    post again or use “force” paths if your build exposes them.
+
+
+15. FIGURE INDEX (SVG IN docs/images/)
+--------------------------------------
+  01-admin-menu.svg     — Sidebar location of AI Automator.
+  02-settings-api.svg   — API tab and Save / test actions.
+  03-queue-bulk.svg     — Bulk line format and stagger options.
+  04-generate-flow.svg  — Generate form and conceptual pipeline steps.
+  05-pipeline.svg       — Queue → cron → LLM → post → SEO/index.
+
+For the rich HTML edition with the same figures embedded, open:
+
+  docs/USER-GUIDE.html
+
+================================================================================
+  End of USER-GUIDE.txt
+================================================================================

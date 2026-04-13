@@ -1,6 +1,6 @@
 === AI Blog Automator ===
 Contributors: yourname
-Tags: ai, blog, gemini, seo, automation
+Tags: ai, blog, gemini, seo, automation, content, openai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
@@ -8,27 +8,79 @@ Stable tag: 2.0.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Automates blog writing, SEO meta, images, internal linking, and optional Google Indexing API notifications using Google Gemini.
+AI-powered long-form posts with queue automation, stock images, internal linking, FAQ/schema, and optional Google Indexing API.
 
 == Description ==
 
-AI Blog Automator generates long-form posts with outlines, FAQ blocks, featured and in-content images (Unsplash / Pexels), internal links suggested via Gemini, and JSON-LD Article/FAQ schema. Optional Google Search Console Indexing API submission uses a service account JSON key.
+**AI Blog Automator** helps WordPress sites produce draft (or published) articles at scale using modern LLMs—**Google Gemini** by default—with optional **OpenAI**, **Anthropic Claude**, and **custom OpenAI-compatible** endpoints. An **Auto** provider mode can chain providers when one rate-limits.
+
+**What you get**
+
+* **Generate** — One-off articles from topic + primary keyword (AJAX), with optional secondary keywords and categories.
+* **Queue** — Schedule many articles; **bulk paste** from a spreadsheet (tabs) or pipe-separated lines: title, focus keyphrase, other keywords, category IDs, article format; optional **daily/weekly staggering** from a start date.
+* **Content** — Outlines, sections, mandatory **FAQ** block (search-style Q&A), closing paragraphs without stock “conclusion” headings, editorial cleanup (no emojis / typographic dashes per policy), outbound links to reputable sources where prompted.
+* **Images** — **Pexels** and/or **Unsplash** (official API; Unsplash Source is retired). Featured image + in-article figures with **credits** when the API provides them.
+* **Internal links** — Suggestions against your **published posts and pages**; machine placeholders are always replaced with real `<a>` links.
+* **SEO** — Meta title/description and focus keyword for **Yoast**, **Rank Math**, **All in One SEO**, or **native** `_aiba_*` output. **Secondary keywords** map into synonyms / additional keywords / combined keyword fields where supported.
+* **Schema** — Optional JSON-LD for Article and FAQ when enabled.
+* **Indexing** — Optional **Google Search Console Indexing API** using a service account JSON key.
+
+**Documentation**
+
+Full administrator documentation ships with the plugin:
+
+* `docs/USER-GUIDE.html` — Open in a browser for a **styled guide with SVG figures** (sidebar, API settings, queue bulk, generate flow, pipeline diagram).
+* `docs/USER-GUIDE.txt` — Same material as **plain text**, with paths to the same figures for offline reading.
+* `LICENSE` — **GPLv2 or later** (copyright and license notice; full text linked from License URI above).
+
+**Requirements**
+
+WordPress **6.0+**, PHP **8.0+**. At least one LLM API key. For images, configure **Pexels** and/or **Unsplash Access Key** (see Settings → API).
 
 == Installation ==
 
-1. Upload the `ai-blog-automator` folder to `/wp-content/plugins/`.
-2. Activate the plugin through the **Plugins** screen.
-3. Open **AI Automator → Settings**, add your Gemini API key, and configure niche, author, and automation options.
+1. Upload the plugin folder to `wp-content/plugins/` (keep `ai-blog-automator.php` at the root of the folder).
+2. Activate **AI Blog Automator** under **Plugins**.
+3. Go to **AI Automator → Settings → API**: add your **Gemini** key (and optional Pexels / Unsplash / other providers).
+4. Click **Save**, then **Test API connections**.
+5. Set **Content**, **Automation**, and **SEO** tabs to match your site.
+6. Read **`docs/USER-GUIDE.html`** (or `USER-GUIDE.txt`) for step-by-step workflows, queue column formats, and troubleshooting.
 
 == Frequently Asked Questions ==
 
 = Does this work without Yoast or Rank Math? =
 
-Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags when no supported SEO plugin is active.
+Yes. Choose **native** SEO handling or leave detection on **auto** when no supported SEO plugin is present; the plugin stores `_aiba_*` meta and can output description, canonical, and Open Graph tags when configured.
 
 = Is Google Indexing required? =
 
-No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
+No. Disable auto indexing in settings if you do not use the Indexing API.
+
+= Why do I need Pexels or Unsplash keys? =
+
+Unsplash’s old “Source” image URLs are **disabled**. The plugin uses **Pexels** and/or the **official Unsplash API** so featured and in-content images download reliably with proper attribution.
+
+= Where is the full user manual? =
+
+In the plugin directory: **`docs/USER-GUIDE.html`** (recommended) and **`docs/USER-GUIDE.txt`**. Figures live in **`docs/images/`** (SVG diagrams).
+
+= Can I use bulk queue for a whole month? =
+
+Yes. Paste one line per article (tab- or pipe-separated fields). Use **Stagger publishing** (daily or weekly) and a **start date** so `scheduled_at` spreads jobs; time of day follows **Automation → Publish time**.
+
+== Screenshots ==
+
+Illustrations ship as **SVG** files in `docs/images/` (open beside the HTML guide or embed in your intranet):
+
+1. `01-admin-menu.svg` — Where **AI Automator** appears in the admin sidebar.
+2. `02-settings-api.svg` — **Settings → API** keys and save/test flow.
+3. `03-queue-bulk.svg` — **Bulk queue** line format and stagger options.
+4. `04-generate-flow.svg` — **Generate** screen and conceptual pipeline.
+5. `05-pipeline.svg` — Queue → processing → LLM → post → SEO/index.
+
+== Upgrade Notice ==
+
+If you previously relied on Unsplash without a Pexels key, add an **Unsplash Access Key** under Settings → API. Review `docs/USER-GUIDE.html` for image and queue behaviour changes in recent releases.
 
 == Changelog ==
 
@@ -83,7 +135,7 @@ No. Disable **Auto Google indexing** in settings if you do not use the Indexing 
 * Version 2.0.0 — recommended full reinstall or upload of this zip if a previous build left the site in recovery mode.
 
 = 1.1.4 =
-* Fix: restore a single full bootstrap on `AIBA_Core::init()` so front-end, admin, and cron never run with only a partial class set (this caused critical errors when the queue or trends cron fired).
+* Fix: restore a single full bootstrap on `AIBA_Core::init()` so front-end, admin, and cron never run with only a partial class set (which caused critical errors when the queue or trends cron fired).
 * Hardening: call `AIBA_Core::load_full_includes()` at the start of queue processing and auto-trends handlers so those hooks are safe even if invoked outside a normal plugin boot.
 * Activation remains lean (scheduler + schema + defaults only); the main file still skips `init()` only during `WP_SANDBOX_SCRAPING`.
 

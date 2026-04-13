@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>AI Blog Automator — User Guide</title>
+	<style>
+		:root {
+			--bg: #f6f7f7;
+			--card: #fff;
+			--text: #1d2327;
+			--muted: #50575e;
+			--accent: #2271b1;
+			--border: #dcdcde;
+			--maxw: 52rem;
+		}
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+			font-size: 1rem;
+			line-height: 1.6;
+			color: var(--text);
+			background: var(--bg);
+		}
+		header {
+			background: linear-gradient(135deg, #1d2327 0%, #2c3338 100%);
+			color: #fff;
+			padding: 2rem 1.5rem;
+		}
+		header h1 { margin: 0 0 0.5rem; font-size: 1.75rem; font-weight: 600; }
+		header p { margin: 0; opacity: 0.9; max-width: var(--maxw); }
+		main { max-width: var(--maxw); margin: 0 auto; padding: 1.5rem; }
+		nav.toc {
+			background: var(--card);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 1.25rem 1.5rem;
+			margin-bottom: 2rem;
+		}
+		nav.toc h2 { margin: 0 0 0.75rem; font-size: 1.1rem; }
+		nav.toc ol { margin: 0; padding-left: 1.25rem; }
+		nav.toc a { color: var(--accent); text-decoration: none; }
+		nav.toc a:hover { text-decoration: underline; }
+		section {
+			background: var(--card);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 1.5rem 1.75rem;
+			margin-bottom: 1.5rem;
+		}
+		section h2 {
+			margin: 0 0 1rem;
+			font-size: 1.35rem;
+			padding-bottom: 0.5rem;
+			border-bottom: 2px solid var(--accent);
+		}
+		section h3 { margin: 1.25rem 0 0.5rem; font-size: 1.05rem; color: var(--text); }
+		figure {
+			margin: 1rem 0;
+			padding: 0.75rem;
+			background: #fafafa;
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			text-align: center;
+		}
+		figure img {
+			max-width: 100%;
+			height: auto;
+			border-radius: 4px;
+			border: 1px solid var(--border);
+		}
+		figcaption {
+			margin-top: 0.5rem;
+			font-size: 0.875rem;
+			color: var(--muted);
+			text-align: left;
+		}
+		ul, ol { padding-left: 1.25rem; }
+		li { margin: 0.35rem 0; }
+		code, kbd {
+			font-family: ui-monospace, Consolas, monospace;
+			font-size: 0.9em;
+			background: #f0f0f1;
+			padding: 0.1em 0.35em;
+			border-radius: 3px;
+		}
+		.note {
+			background: #f0f6fc;
+			border-left: 4px solid var(--accent);
+			padding: 0.75rem 1rem;
+			margin: 1rem 0;
+			font-size: 0.95rem;
+		}
+		footer {
+			text-align: center;
+			padding: 2rem 1rem;
+			color: var(--muted);
+			font-size: 0.875rem;
+		}
+		@media print {
+			header { background: #1d2327; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+			nav.toc { break-inside: avoid; }
+			section { break-inside: avoid; box-shadow: none; }
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<h1>AI Blog Automator — User Guide</h1>
+		<p>Full documentation for site administrators. Keep this file with the plugin (<code>docs/USER-GUIDE.html</code>). Figures are SVG diagrams that open offline next to this file.</p>
+	</header>
+	<main>
+		<nav class="toc" aria-label="Table of contents">
+			<h2>Table of contents</h2>
+			<ol>
+				<li><a href="#overview">What the plugin does</a></li>
+				<li><a href="#requirements">Requirements and API keys</a></li>
+				<li><a href="#install">Installation and activation</a></li>
+				<li><a href="#menu">Admin menu</a></li>
+				<li><a href="#settings">Settings walkthrough</a></li>
+				<li><a href="#generate">Generate a single post</a></li>
+				<li><a href="#queue">Queue: single row and bulk import</a></li>
+				<li><a href="#automation">Automation and cron</a></li>
+				<li><a href="#images">Images (Pexels and Unsplash)</a></li>
+				<li><a href="#seo">SEO plugins</a></li>
+				<li><a href="#links">Internal links</a></li>
+				<li><a href="#logs">Activity logs</a></li>
+				<li><a href="#troubleshooting">Troubleshooting</a></li>
+			</ol>
+		</nav>
+
+		<section id="overview">
+			<h2>1. What the plugin does</h2>
+			<p>AI Blog Automator connects WordPress to large language models (Gemini by default, with optional OpenAI, Anthropic Claude, and custom OpenAI-compatible APIs). It generates long-form HTML articles from topics and keywords, adds FAQ blocks, attaches stock images, injects internal links, writes SEO meta for supported plugins, and optionally notifies Google’s Indexing API.</p>
+			<figure>
+				<img src="images/05-pipeline.svg" width="760" height="200" alt="Diagram: Queue to cron to LLM to WordPress post to SEO" loading="lazy" />
+				<figcaption><strong>Figure 1.</strong> High-level pipeline: queued jobs are processed by WordPress cron (or manual action), the LLM produces content, a post is created, then images, links, and SEO run.</figcaption>
+			</figure>
+		</section>
+
+		<section id="requirements">
+			<h2>2. Requirements and API keys</h2>
+			<ul>
+				<li><strong>WordPress</strong> 6.0+ and <strong>PHP</strong> 8.0+.</li>
+				<li>At least one <strong>LLM key</strong> (Gemini recommended).</li>
+				<li>For reliable images: <strong>Pexels</strong> API key and/or <strong>Unsplash</strong> Access Key (official API; legacy Unsplash Source URLs are not used).</li>
+				<li>Optional: Google <strong>service account JSON</strong> for the Indexing API.</li>
+			</ul>
+			<div class="note">Store production keys securely. On shared hosting, restrict file permissions on backups that include the database (options table holds keys unless you use constants in <code>wp-config.php</code>).</div>
+		</section>
+
+		<section id="install">
+			<h2>3. Installation and activation</h2>
+			<ol>
+				<li>Copy the plugin folder into <code>wp-content/plugins/</code> (preserve <code>ai-blog-automator.php</code> at the plugin root).</li>
+				<li>In wp-admin: <strong>Plugins → Installed Plugins</strong> → <strong>Activate</strong> “AI Blog Automator”.</li>
+				<li>Activation registers schedules and creates queue/log database structures as needed.</li>
+				<li>Open <strong>AI Automator → Settings</strong>, enter keys, click <strong>Save</strong>, then use <strong>Test API connections</strong>.</li>
+			</ol>
+		</section>
+
+		<section id="menu">
+			<h2>4. Admin menu overview</h2>
+			<p>The plugin adds a top-level <strong>AI Automator</strong> item in the WordPress admin sidebar. Submenus typically include Dashboard, Settings, Generate, Queue, and Activity logs (exact labels may vary with translations).</p>
+			<figure>
+				<img src="images/01-admin-menu.svg" width="760" height="280" alt="Illustrated sidebar with AI Automator highlighted" loading="lazy" />
+				<figcaption><strong>Figure 2.</strong> Conceptual admin layout: dark sidebar with “AI Automator” highlighted and sample sub-items.</figcaption>
+			</figure>
+		</section>
+
+		<section id="settings">
+			<h2>5. Settings walkthrough</h2>
+			<p>The <strong>API</strong> tab is where you connect external services. After saving, use <strong>Test API connections</strong> to verify Gemini, optional providers, Pexels, Unsplash, and indexing credentials.</p>
+			<figure>
+				<img src="images/02-settings-api.svg" width="760" height="320" alt="Illustrated API settings fields and Save button" loading="lazy" />
+				<figcaption><strong>Figure 3.</strong> API tab concept: Gemini, Pexels, Unsplash keys and Save. Your real screen uses WordPress form styling.</figcaption>
+			</figure>
+			<h3>Other tabs (summary)</h3>
+			<ul>
+				<li><strong>Content</strong> — niche, word count, tone, language, author, default categories, images per post, max internal links.</li>
+				<li><strong>Prompts &amp; formats</strong> — article template slug; optional outline/section prompt prefix, suffix, and global append.</li>
+				<li><strong>Automation</strong> — posts per day, publish time, publish status, queue recurrence.</li>
+				<li><strong>SEO</strong> — plugin detection vs native; FAQ and Article schema toggles.</li>
+				<li><strong>Advanced</strong> — log retention, disabled post types for front-end meta output.</li>
+			</ul>
+		</section>
+
+		<section id="generate">
+			<h2>6. Generate a single post</h2>
+			<p>Use <strong>AI Automator → Generate</strong> for a one-off article. Fill topic/title and primary keyword, add optional secondary keywords and categories if shown, then submit. The browser runs an AJAX request; when complete, follow the link to edit the new draft.</p>
+			<figure>
+				<img src="images/04-generate-flow.svg" width="760" height="300" alt="Generate form and numbered pipeline steps" loading="lazy" />
+				<figcaption><strong>Figure 4.</strong> Generate screen concept and what the pipeline does (outline, images, links, SEO).</figcaption>
+			</figure>
+			<div class="note">Always review AI output for factual accuracy, licensing of cited sources, and broken or hallucinated URLs before publishing.</div>
+		</section>
+
+		<section id="queue">
+			<h2>7. Queue: single row and bulk import</h2>
+			<p><strong>Single “Add to queue”</strong> creates one pending job with topic, focus keyword, optional other keywords, categories, and article format.</p>
+			<p><strong>Bulk queue</strong> accepts many lines at once—ideal for a month of titles from a spreadsheet.</p>
+			<figure>
+				<img src="images/03-queue-bulk.svg" width="760" height="360" alt="Bulk textarea with tab-separated example lines" loading="lazy" />
+				<figcaption><strong>Figure 5.</strong> Bulk paste: tab-separated columns (title, focus, other keywords, category IDs, format slug) or pipe-separated equivalent; stagger options spread publish dates.</figcaption>
+			</figure>
+			<h3>Column reference (bulk)</h3>
+			<ul>
+				<li><strong>Title</strong> — post topic / working title.</li>
+				<li><strong>Focus keyphrase</strong> — primary SEO keyword for that row.</li>
+				<li><strong>Other keywords</strong> — comma or semicolon separated inside the cell/field.</li>
+				<li><strong>Category IDs</strong> — WordPress category term IDs, comma-separated (optional; defaults apply if empty).</li>
+				<li><strong>Article format</strong> — template slug (optional).</li>
+			</ul>
+			<p>Legacy lines <code>Title|keyword</code> or a single title per line still work.</p>
+		</section>
+
+		<section id="automation">
+			<h2>8. Automation and cron</h2>
+			<p>Queue processing relies on WordPress cron unless your host triggers <code>wp-cron.php</code> on a system schedule. Low-traffic sites should use real cron or a host feature so pending jobs run on time. “Publish time” in Automation combines with bulk stagger dates to set <code>scheduled_at</code> on queue rows.</p>
+		</section>
+
+		<section id="images">
+			<h2>9. Images (Pexels and Unsplash)</h2>
+			<p>Featured and in-content images try <strong>Pexels</strong> first when a key is set, then <strong>Unsplash</strong> via the official API when an Access Key is set. Without keys, downloads fail and errors appear in Activity logs. Captions and credits are stored where the APIs provide photographer metadata.</p>
+		</section>
+
+		<section id="seo">
+			<h2>10. SEO plugins</h2>
+			<p>When Yoast, Rank Math, or All in One SEO is active (or set explicitly in Settings), the plugin writes focus keyword, meta description, title where supported, and maps <strong>secondary keywords</strong> into synonyms / additional keywords / combined keyword fields per integration. Native mode stores <code>_aiba_*</code> meta and can output tags when no SEO plugin handles them.</p>
+		</section>
+
+		<section id="links">
+			<h2>11. Internal links</h2>
+			<p>During generation, the model may insert machine tokens such as <code>[INTERNAL_LINK_PLACEHOLDER: anchor phrase]</code>. The internal linker replaces <em>all</em> variants with real <code>&lt;a href&gt;</code> links to published posts or pages, or sensible fallbacks, so visitors never see raw placeholder text.</p>
+		</section>
+
+		<section id="logs">
+			<h2>12. Activity logs</h2>
+			<p>Use the plugin’s log screen to diagnose LLM errors, HTTP failures for images, indexing API responses, and queue processing. Increase retention in Advanced if you need longer history (within reasonable database size).</p>
+		</section>
+
+		<section id="troubleshooting">
+			<h2>13. Troubleshooting</h2>
+			<ul>
+				<li><strong>Generate button does nothing</strong> — check browser console; confirm scripts load; verify you are on the correct <code>admin.php?page=...</code> screen.</li>
+				<li><strong>429 / rate limit</strong> — reduce word count or daily volume; add fallback API keys in Auto mode.</li>
+				<li><strong>No images</strong> — add Pexels and/or Unsplash keys; run API test.</li>
+				<li><strong>Queue stuck</strong> — verify cron; read Activity logs for SQL or capability errors.</li>
+			</ul>
+			<p>A plain-text copy of this guide (without embedded images) lives at <code>docs/USER-GUIDE.txt</code> and references the same <code>docs/images/*.svg</code> files.</p>
+		</section>
+	</main>
+	<footer>
+		<p>AI Blog Automator — documentation package. License: GPLv2 or later (see <code>LICENSE</code> in the plugin root).</p>
+	</footer>
+</body>
+</html>

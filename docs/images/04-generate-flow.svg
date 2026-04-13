@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t4">
+  <title id="t4">Generate post: topic and keyword to one-click draft</title>
+  <rect width="760" height="300" fill="#fff" stroke="#dcdcde"/>
+  <text x="24" y="38" font-family="Segoe UI, sans-serif" font-size="18" font-weight="600" fill="#1d2327">Generate</text>
+  <rect x="24" y="60" width="340" height="40" fill="#fff" stroke="#8c8f94" rx="2"/>
+  <text x="36" y="86" fill="#646970" font-family="Segoe UI, sans-serif" font-size="12">Topic / title</text>
+  <rect x="24" y="120" width="340" height="40" fill="#fff" stroke="#8c8f94" rx="2"/>
+  <text x="36" y="146" fill="#646970" font-family="Segoe UI, sans-serif" font-size="12">Primary keyword</text>
+  <rect x="24" y="200" width="180" height="44" fill="#00a32a" rx="4"/>
+  <text x="114" y="229" text-anchor="middle" fill="#fff" font-family="Segoe UI, sans-serif" font-size="14" font-weight="600">Generate</text>
+  <rect x="400" y="60" width="336" height="200" fill="#f0f6fc" stroke="#72aee6" rx="4"/>
+  <text x="420" y="92" fill="#1d2327" font-family="Segoe UI, sans-serif" font-size="13" font-weight="600">What happens</text>
+  <text x="420" y="120" fill="#50575e" font-family="Segoe UI, sans-serif" font-size="12">1. Outline ’ sections ’ FAQ</text>
+  <text x="420" y="145" fill="#50575e" font-family="Segoe UI, sans-serif" font-size="12">2. Images (Pexels / Unsplash)</text>
+  <text x="420" y="170" fill="#50575e" font-family="Segoe UI, sans-serif" font-size="12">3. Internal links + SEO meta</text>
+  <text x="420" y="195" fill="#50575e" font-family="Segoe UI, sans-serif" font-size="12">4. Draft (or publish per settings)</text>
+</svg>
