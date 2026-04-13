@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation, content, openai
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.0.13
+Stable tag: 2.0.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -87,6 +87,11 @@ Illustrations ship as **SVG** files in `docs/images/` (open beside the HTML guid
 If you previously relied on Unsplash without a Pexels key, add an **Unsplash Access Key** under Settings → API. Review `docs/USER-GUIDE.html` for image and queue behaviour changes in recent releases.
 
 == Changelog ==
+
+= 2.0.14 =
+* Generate (AJAX): parse responses as text first so PHP errors, timeouts, or HTML from the server show a useful snippet instead of only “Request failed (network or server).”
+* Generate: raise execution time limit (filter `aiba_generate_max_execution_seconds`, default 300s) and `ignore_user_abort` to reduce host timeouts on long LLM runs.
+* Generate: guard missing post after publish; fallback edit URL if `get_edit_post_link` is empty.
 
 = 2.0.13 =
 * Envato author pack in `packaging/envato/` (item description HTML, buyer install guide, credits, privacy, support template, screenshot/video scripts, submission + zip build checklists).

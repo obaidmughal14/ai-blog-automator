@@ -1,5 +1,9 @@
 # Changelog (buyer-facing)
 
+## 2.0.14
+
+- Clearer **Generate** errors when the server returns HTML or times out; longer default PHP time budget for generation.
+
 ## 2.0.13
 
 - **Author pack** in `packaging/envato/`: listing HTML, installation, credits, privacy, support template, screenshot + video scripts, submission + zip checklists.

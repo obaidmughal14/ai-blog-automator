@@ -883,6 +883,17 @@ class AIBA_Admin_UI {
 			wp_send_json_error( array( 'message' => __( 'Forbidden.', 'ai-blog-automator' ) ), 403 );
 		}
 
+		if ( function_exists( 'ignore_user_abort' ) ) {
+			ignore_user_abort( true );
+		}
+		if ( function_exists( 'set_time_limit' ) ) {
+			// LLM + images + block conversion can exceed default 30s on shared hosts.
+			$max = (int) apply_filters( 'aiba_generate_max_execution_seconds', 300 );
+			if ( $max > 0 ) {
+				set_time_limit( $max );
+			}
+		}
+
 		$topic      = isset( $_POST['topic'] ) ? sanitize_text_field( wp_unslash( $_POST['topic'] ) ) : '';
 		$primary    = isset( $_POST['primary_keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['primary_keyword'] ) ) : '';
 		$secondary  = isset( $_POST['secondary_keywords'] ) ? sanitize_text_field( wp_unslash( $_POST['secondary_keywords'] ) ) : '';
@@ -951,6 +962,11 @@ class AIBA_Admin_UI {
 		}
 
 		$p = get_post( $post_id );
+		if ( ! $p instanceof WP_Post ) {
+			AIBA_Core::log( $post_id, 'publish', 'error', 'Post missing after publish.' );
+			wp_send_json_error( array( 'message' => __( 'Post was created but could not be loaded for the response.', 'ai-blog-automator' ) ) );
+		}
+
 		$score = AIBA_SEO_Handler::calculate_seo_score(
 			(string) $p->post_content,
 			(string) ( $article['primary_keyword'] ?? '' ),
@@ -958,11 +974,16 @@ class AIBA_Admin_UI {
 			(string) ( $article['meta_description'] ?? '' )
 		);
 
+		$edit_url = get_edit_post_link( $post_id, 'raw' );
+		if ( ! is_string( $edit_url ) || $edit_url === '' ) {
+			$edit_url = admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' );
+		}
+
 		wp_send_json_success(
 			array(
 				'post_id'   => $post_id,
-				'post_url'  => get_edit_post_link( $post_id, 'raw' ),
-				'view_url'  => get_permalink( $post_id ),
+				'post_url'  => $edit_url,
+				'view_url'  => get_permalink( $post_id ) ?: '',
 				'seo_score' => $score,
 			)
 		);

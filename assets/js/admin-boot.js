@@ -59,6 +59,56 @@
 		return params.toString();
 	}
 
+	/**
+	 * Parse admin-ajax body as JSON; on failure return a shaped error (PHP fatals / notices often break JSON).
+	 *
+	 * @param {Response} r
+	 * @returns {Promise<object>}
+	 */
+	function parseAdminAjaxJson(r) {
+		return r.text().then(function (text) {
+			var trim = (text || '').trim();
+			if (!trim) {
+				return {
+					success: false,
+					data: {
+						message:
+							'Empty response (HTTP ' +
+							r.status +
+							'). Often a server timeout while calling the LLM—increase PHP max_execution_time or try a shorter word count.',
+					},
+				};
+			}
+			try {
+				var data = JSON.parse(trim);
+				if (typeof data !== 'object' || data === null) {
+					return {
+						success: false,
+						data: { message: 'Unexpected response: ' + String(trim).slice(0, 160) },
+					};
+				}
+				return data;
+			} catch (e) {
+				var plain = trim
+					.replace(/<script[\s\S]*?<\/script>/gi, ' ')
+					.replace(/<[^>]+>/g, ' ')
+					.replace(/\s+/g, ' ')
+					.trim()
+					.slice(0, 400);
+				return {
+					success: false,
+					data: {
+						message:
+							'Server returned non-JSON (HTTP ' +
+							r.status +
+							'). Usually a PHP error, security rule, or timeout. Snippet: ' +
+							(plain || '(no text)'),
+					},
+				};
+			}
+		});
+	}
+
 	function postAjax(action, extra) {
 		var payload = { action: action, nonce: adminNonce() };
 		if (extra && typeof extra === 'object') {
@@ -280,9 +330,7 @@
 				body: buildBody(payload),
 				credentials: 'same-origin',
 			})
-				.then(function (r) {
-					return r.json();
-				})
+				.then(parseAdminAjaxJson)
 				.then(function (res) {
 					if (spin) {
 						spin.setAttribute('hidden', 'hidden');
@@ -302,12 +350,13 @@
 					}
 					if (res.success && res.data) {
 						var d = res.data;
+						var editHref = d.post_url || '#';
 						if (resEl) {
 							resEl.innerHTML =
 								'<strong>Done.</strong> SEO score (est.): ' +
-								d.seo_score +
+								(d.seo_score != null ? d.seo_score : '—') +
 								' · <a href="' +
-								d.post_url +
+								editHref +
 								'">Edit post</a>';
 						}
 					} else {
@@ -319,7 +368,7 @@
 						pushLiveNotice(msg, isRl);
 					}
 				})
-				.catch(function () {
+				.catch(function (err) {
 					if (spin) {
 						spin.setAttribute('hidden', 'hidden');
 					}
@@ -328,7 +377,10 @@
 							s.classList.add('aiba-step-done');
 						});
 					}
-					var msg = 'Request failed (network or server).';
+					var msg =
+						err && err.message
+							? 'Network error: ' + err.message
+							: 'Request failed (network or connection reset). If generation takes long, your host may be timing out—try a lower word count or raise PHP max_execution_time.';
 					if (resEl) {
 						resEl.textContent = msg;
 					}
