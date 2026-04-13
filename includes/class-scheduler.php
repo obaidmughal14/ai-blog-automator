@@ -85,6 +85,7 @@ class AIBA_Scheduler {
 	 * Process oldest pending queue row.
 	 */
 	public static function process_next_in_queue(): void {
+		AIBA_Core::load_full_includes();
 		global $wpdb;
 		$now = current_time( 'mysql' );
 		$row = $wpdb->get_row(
@@ -235,6 +236,7 @@ class AIBA_Scheduler {
 	 * Daily trends fetch and enqueue.
 	 */
 	public static function auto_fetch_trends_and_queue(): void {
+		AIBA_Core::load_full_includes();
 		if ( '1' !== (string) get_option( 'aiba_auto_trends', '1' ) ) {
 			return;
 		}

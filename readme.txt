@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 1.1.3
+Stable tag: 1.1.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,11 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 1.1.4 =
+* Fix: restore a single full bootstrap on `AIBA_Core::init()` so front-end, admin, and cron never run with only a partial class set (this caused critical errors when the queue or trends cron fired).
+* Hardening: call `AIBA_Core::load_full_includes()` at the start of queue processing and auto-trends handlers so those hooks are safe even if invoked outside a normal plugin boot.
+* Activation remains lean (scheduler + schema + defaults only); the main file still skips `init()` only during `WP_SANDBOX_SCRAPING`.
 
 = 1.1.3 =
 * Fix: lean activation path (database, default options, cron schedules only) so activating the plugin no longer loads the full LLM/API stack during WordPress’s activation sandbox.

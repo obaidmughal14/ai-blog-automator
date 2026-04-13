@@ -13,14 +13,7 @@ defined( 'ABSPATH' ) || exit;
 class AIBA_Core {
 
 	/**
-	 * Light includes (front-end visitors).
-	 *
-	 * @var bool
-	 */
-	private static bool $light_includes_loaded = false;
-
-	/**
-	 * Full stack (admin, cron, CLI, or on demand).
+	 * Whether all PHP includes were loaded.
 	 *
 	 * @var bool
 	 */
@@ -37,11 +30,9 @@ class AIBA_Core {
 	 * Initialize plugin.
 	 */
 	public static function init(): void {
-		if ( self::needs_full_bootstrap() ) {
-			self::load_full_includes();
-		} else {
-			self::load_light_includes();
-		}
+		// Single code path: always load the full stack when the plugin boots.
+		// Conditional loading caused fatals when cron or other hooks ran without LLM classes loaded.
+		self::load_full_includes();
 		add_action( 'init', array( __CLASS__, 'maybe_upgrade_db' ), 5 );
 		add_action( 'init', array( __CLASS__, 'load_textdomain' ) );
 
@@ -54,47 +45,10 @@ class AIBA_Core {
 	}
 
 	/**
-	 * Load heavy dependencies only in admin, cron, or CLI — not on public page views.
-	 */
-	private static function needs_full_bootstrap(): bool {
-		// Activation "sandbox" include runs before the plugin is active; load full stack (matches pre-split behavior).
-		if ( defined( 'WP_SANDBOX_SCRAPING' ) && WP_SANDBOX_SCRAPING ) {
-			return true;
-		}
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			return true;
-		}
-		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
-			return true;
-		}
-		if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
-			return true;
-		}
-		if ( function_exists( 'is_admin' ) && is_admin() ) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
 	 * Load translations.
 	 */
 	public static function load_textdomain(): void {
 		load_plugin_textdomain( 'ai-blog-automator', false, dirname( plugin_basename( AIBA_PLUGIN_DIR . 'ai-blog-automator.php' ) ) . '/languages' );
-	}
-
-	/**
-	 * Minimal files for public requests (meta/schema, cron hooks, indexing on publish).
-	 */
-	public static function load_light_includes(): void {
-		if ( self::$light_includes_loaded || self::$full_includes_loaded ) {
-			return;
-		}
-		$dir = AIBA_PLUGIN_DIR . 'includes/';
-		require_once $dir . 'class-google-indexing.php';
-		require_once $dir . 'class-seo-handler.php';
-		require_once $dir . 'class-scheduler.php';
-		self::$light_includes_loaded = true;
 	}
 
 	/**
@@ -121,8 +75,7 @@ class AIBA_Core {
 		require_once $dir . 'class-google-indexing.php';
 		require_once $dir . 'class-scheduler.php';
 		require_once $dir . 'class-admin-ui.php';
-		self::$full_includes_loaded  = true;
-		self::$light_includes_loaded = true;
+		self::$full_includes_loaded = true;
 	}
 
 	/**
