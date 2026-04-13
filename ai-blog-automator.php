@@ -3,7 +3,7 @@
  * Plugin Name: AI Blog Automator
  * Plugin URI:  https://yoursite.com
  * Description: Automates blog writing, SEO, images, internal linking & Google indexing via Gemini AI.
- * Version:     2.0.2
+ * Version:     2.0.3
  * Author:      Devigon Tech
  * Author URI:  https://devigontech.com
  * Text Domain: ai-blog-automator
@@ -16,7 +16,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'AIBA_VERSION', '2.0.2' );
+define( 'AIBA_VERSION', '2.0.3' );
 define( 'AIBA_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AIBA_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AIBA_PREFIX', 'aiba_' );

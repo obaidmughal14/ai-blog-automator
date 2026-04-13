@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,9 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 2.0.3 =
+* Fix: Admin JavaScript no longer assumes `jQuery` exists as a bare global or that `aibaAdmin` is always defined. Uses `window.jQuery` with an early exit, reads `window.aibaAdmin` with fallbacks for `ajaxurl` / nonces / `admin.php` base URL, wraps settings tab init in try/catch, and matches hash deep-links with `.filter()` so a bad selector cannot abort the whole script (which left Generate, Dashboard, Queue bulk, and other controls dead).
 
 = 2.0.2 =
 * Fix: Settings screen tabs — delegate clicks on `.aiba-settings-nav`, toggle the HTML `hidden` property on panels (avoids jQuery `.show()` vs inline `display:none` conflicts), sync `aria-selected`, and support deep-link `#aiba-tab-*` hashes.

@@ -1,58 +1,105 @@
-(function ($) {
+/**
+ * AI Blog Automator — admin UI (requires jQuery; safe if localization is late).
+ */
+(function () {
 	'use strict';
 
-	function postAjax(action, extra) {
-		return $.post(aibaAdmin.ajaxUrl, $.extend({ action: action, nonce: aibaAdmin.nonce }, extra || {}));
+	if (typeof window.jQuery === 'undefined') {
+		if (window.console && console.error) {
+			console.error('AI Blog Automator: jQuery is not loaded; admin buttons will not work. Disable “remove jQuery” optimizations or conflicting plugins.');
+		}
+		return;
 	}
 
-	function initAibaSettingsTabs() {
-		var $nav = $('.wrap.aiba-wrap .aiba-settings-nav');
-		if (!$nav.length) {
-			return;
-		}
-		var $form = $nav.next('form');
-		if (!$form.length) {
-			$form = $('.wrap.aiba-wrap form[action*="options.php"]').first();
-		}
-		var $panels = $form.find('.aiba-tab-panel');
+	window.jQuery(function ($) {
+		var admin =
+			typeof window.aibaAdmin === 'object' && window.aibaAdmin !== null ? window.aibaAdmin : {};
 
-		function switchTab($tab) {
-			var href = $tab.attr('href');
-			if (!href || href.charAt(0) !== '#') {
+		function ajaxUrl() {
+			if (admin.ajaxUrl) {
+				return admin.ajaxUrl;
+			}
+			if (typeof window.ajaxurl === 'string' && window.ajaxurl) {
+				return window.ajaxurl;
+			}
+			return '/wp-admin/admin-ajax.php';
+		}
+
+		function adminNonce() {
+			return admin.nonce || '';
+		}
+
+		function genNonce() {
+			return admin.genNonce || '';
+		}
+
+		function adminBase() {
+			return admin.adminBase || window.location.origin + '/wp-admin/admin.php';
+		}
+
+		function postAjax(action, extra) {
+			return $.post(ajaxUrl(), $.extend({ action: action, nonce: adminNonce() }, extra || {}));
+		}
+
+		function initAibaSettingsTabs() {
+			var $nav = $('.wrap.aiba-wrap .aiba-settings-nav');
+			if (!$nav.length) {
 				return;
 			}
-			var $panel = $form.find(href);
-			if (!$panel.length) {
+			var $form = $nav.next('form');
+			if (!$form.length) {
+				$form = $('.wrap.aiba-wrap form[action*="options.php"]').first();
+			}
+			if (!$form.length) {
 				return;
 			}
-			$nav.find('a.nav-tab').removeClass('nav-tab-active').attr('aria-selected', 'false');
-			$tab.addClass('nav-tab-active').attr('aria-selected', 'true');
-			$panels.prop('hidden', true).attr('aria-hidden', 'true');
-			$panel.prop('hidden', false).attr('aria-hidden', 'false');
+			var $panels = $form.find('.aiba-tab-panel');
+
+			function switchTab($tab) {
+				var href = $tab.attr('href');
+				if (!href || href.charAt(0) !== '#') {
+					return;
+				}
+				var $panel = $form.find(href);
+				if (!$panel.length) {
+					return;
+				}
+				$nav.find('a.nav-tab').removeClass('nav-tab-active').attr('aria-selected', 'false');
+				$tab.addClass('nav-tab-active').attr('aria-selected', 'true');
+				$panels.prop('hidden', true).attr('aria-hidden', 'true');
+				$panel.prop('hidden', false).attr('aria-hidden', 'false');
+			}
+
+			$nav.on('click', 'a.nav-tab', function (e) {
+				e.preventDefault();
+				var $t = $(this);
+				switchTab($t);
+				var href = $t.attr('href');
+				if (href && window.history && window.history.replaceState && typeof URL === 'function') {
+					var u = new URL(window.location.href);
+					u.hash = href;
+					window.history.replaceState(null, '', u.toString());
+				}
+			});
+
+			var hash = window.location.hash || '';
+			if (hash.indexOf('#aiba-tab-') === 0) {
+				var $match = $nav.find('a.nav-tab').filter(function () {
+					return $(this).attr('href') === hash;
+				}).first();
+				if ($match.length) {
+					switchTab($match);
+				}
+			}
 		}
 
-		$nav.on('click', 'a.nav-tab', function (e) {
-			e.preventDefault();
-			var $t = $(this);
-			switchTab($t);
-			var href = $t.attr('href');
-			if (href && window.history && window.history.replaceState && typeof URL === 'function') {
-				var u = new URL(window.location.href);
-				u.hash = href;
-				window.history.replaceState(null, '', u.toString());
-			}
-		});
-
-		if (window.location.hash && window.location.hash.indexOf('#aiba-tab-') === 0) {
-			var $match = $nav.find('a.nav-tab[href="' + window.location.hash + '"]');
-			if ($match.length) {
-				switchTab($match);
+		try {
+			initAibaSettingsTabs();
+		} catch (e) {
+			if (window.console && console.error) {
+				console.error('AI Blog Automator: settings tabs init failed', e);
 			}
 		}
-	}
-
-	$(function () {
-		initAibaSettingsTabs();
 
 		$('#aiba_word_count_slider').on('input', function () {
 			$('#aiba_word_count').val($(this).val());
@@ -102,7 +149,7 @@
 		});
 
 		$('#aiba-dash-generate').on('click', function () {
-			window.location.href = aibaAdmin.adminBase + '?page=aiba-generate';
+			window.location.href = adminBase() + '?page=aiba-generate';
 		});
 
 		$('#aiba-dash-trends').on('click', function () {
@@ -143,9 +190,11 @@
 			if (!act) {
 				return;
 			}
-			var ids = $('.aiba-row-cb:checked').map(function () {
-				return $(this).val();
-			}).get();
+			var ids = $('.aiba-row-cb:checked')
+				.map(function () {
+					return $(this).val();
+				})
+				.get();
 			if (!ids.length) {
 				return;
 			}
@@ -177,14 +226,17 @@
 		function runAibaGenerate() {
 			var $prog = $('#aiba-gen-progress');
 			var $res = $('#aiba-gen-result');
+			if (!$prog.length) {
+				return;
+			}
 			$prog.prop('hidden', false);
 			$res.empty();
 			$prog.find('.aiba-step').removeClass('aiba-step-done');
 			$prog.find('.aiba-step').first().addClass('aiba-step-done');
 
-			$.post(aibaAdmin.ajaxUrl, {
+			$.post(ajaxUrl(), {
 				action: 'aiba_generate_post',
-				nonce: aibaAdmin.genNonce,
+				nonce: genNonce(),
 				topic: $('#aiba_gen_topic').val(),
 				primary_keyword: $('#aiba_gen_primary').val(),
 				secondary_keywords: $('#aiba_gen_secondary').val(),
@@ -223,4 +275,4 @@
 			runAibaGenerate();
 		});
 	});
-})(jQuery);
+})();
