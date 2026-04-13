@@ -465,6 +465,7 @@ class AIBA_Admin_UI {
 				$trends = $cached;
 			}
 		}
+		$aiba_generate_alerts = self::get_generate_screen_log_alerts( 12 );
 		include AIBA_PLUGIN_DIR . 'templates/admin-generate.php';
 	}
 
@@ -625,6 +626,39 @@ class AIBA_Admin_UI {
 	}
 
 	/**
+	 * Recent error/warning log lines that affect or explain generation failures (Generate screen banner).
+	 *
+	 * @return array<int, object{ id: int, action: string, status: string, message: string, created_at: string }>
+	 */
+	private static function get_generate_screen_log_alerts( int $limit ): array {
+		global $wpdb;
+		$limit   = max( 1, min( 30, $limit ) );
+		$table   = $wpdb->prefix . 'aiba_logs';
+		$since   = date( 'Y-m-d H:i:s', strtotime( '-14 days', (int) current_time( 'timestamp' ) ) );
+		$actions = array(
+			'generate',
+			'llm',
+			'publish',
+			'exception',
+			'gemini_call',
+			'gemini_search',
+			'openai_call',
+			'anthropic_call',
+			'queue',
+			'feature_image',
+			'pexels',
+			'sideload',
+		);
+		$in_actions = implode( ', ', array_fill( 0, count( $actions ), '%s' ) );
+		$sql          = "SELECT id, action, status, message, created_at FROM {$table}
+			WHERE status IN ('error','warning') AND action IN ({$in_actions}) AND created_at >= %s
+			ORDER BY id DESC LIMIT %d";
+		$args         = array_merge( $actions, array( $since, $limit ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.NotPrepared -- placeholders match merged args.
+		return $wpdb->get_results( $wpdb->prepare( $sql, $args ) );
+	}
+
+	/**
 	 * @return array<int, object>
 	 */
 	private static function get_queue_preview( int $limit ): array {
@@ -738,7 +772,9 @@ class AIBA_Admin_UI {
 
 		$article = AIBA_Core::content_generator()->generate_article( $job );
 		if ( is_wp_error( $article ) ) {
+			$err_msg = $article->get_error_message();
 			if ( AIBA_LLM_Client::is_rate_limit_error( $article ) ) {
+				AIBA_Core::log( 0, 'generate', 'warning', $err_msg );
 				wp_send_json_error(
 					array(
 						'code'    => 'rate_limit',
@@ -746,7 +782,8 @@ class AIBA_Admin_UI {
 					)
 				);
 			}
-			wp_send_json_error( array( 'message' => $article->get_error_message() ) );
+			AIBA_Core::log( 0, 'generate', 'error', $err_msg );
+			wp_send_json_error( array( 'message' => $err_msg ) );
 		}
 
 		$settings = array(
@@ -761,6 +798,7 @@ class AIBA_Admin_UI {
 
 		$post_id = AIBA_Core::post_publisher()->publish_post( $article, $settings );
 		if ( is_wp_error( $post_id ) ) {
+			AIBA_Core::log( 0, 'publish', 'error', $post_id->get_error_message() );
 			wp_send_json_error( array( 'message' => $post_id->get_error_message() ) );
 		}
 

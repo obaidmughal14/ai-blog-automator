@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 2.0.3
+Stable tag: 2.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,10 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 2.0.4 =
+* Generate screen: always show a prominent notice listing recent activity-log errors and warnings for the generation pipeline (LLM, publish, queue, images, etc.) from the last 14 days, with a link to Activity logs.
+* Manual Generate AJAX failures are written to the same log and mirrored in a “Last attempt” notice at the top of the page without a full reload.
 
 = 2.0.3 =
 * Fix: Admin JavaScript no longer assumes `jQuery` exists as a bare global or that `aibaAdmin` is always defined. Uses `window.jQuery` with an early exit, reads `window.aibaAdmin` with fallbacks for `ajaxurl` / nonces / `admin.php` base URL, wraps settings tab init in try/catch, and matches hash deep-links with `.filter()` so a bad selector cannot abort the whole script (which left Generate, Dashboard, Queue bulk, and other controls dead).

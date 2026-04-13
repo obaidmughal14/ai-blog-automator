@@ -35,7 +35,51 @@ $get_cat_ids = array_values( array_filter( array_unique( $get_cat_ids ) ) );
 // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
+
+$aiba_generate_alerts = isset( $aiba_generate_alerts ) && is_array( $aiba_generate_alerts ) ? $aiba_generate_alerts : array();
+$aiba_logs_url        = admin_url( 'admin.php?page=aiba-logs' );
+$aiba_has_err         = false;
+foreach ( $aiba_generate_alerts as $aiba_alert_row ) {
+	if ( isset( $aiba_alert_row->status ) && 'error' === $aiba_alert_row->status ) {
+		$aiba_has_err = true;
+		break;
+	}
+}
 ?>
+
+	<div
+		id="aiba-generate-alerts-mount"
+		class="aiba-generate-alerts-mount"
+		data-logs-url="<?php echo esc_url( $aiba_logs_url ); ?>"
+		role="region"
+		aria-label="<?php esc_attr_e( 'Generation and API issues from the activity log', 'ai-blog-automator' ); ?>"
+	>
+		<?php if ( ! empty( $aiba_generate_alerts ) ) : ?>
+			<div class="notice <?php echo $aiba_has_err ? 'notice-error' : 'notice-warning'; ?> aiba-generate-alerts">
+				<p class="aiba-generate-alerts-title">
+					<strong><?php esc_html_e( 'Recent issues that may block or affect generation', 'ai-blog-automator' ); ?></strong>
+					<?php
+					echo ' ';
+					echo '<a href="' . esc_url( $aiba_logs_url ) . '">' . esc_html__( 'View activity logs', 'ai-blog-automator' ) . '</a>';
+					?>
+				</p>
+				<ul class="aiba-generate-alerts-list">
+					<?php foreach ( $aiba_generate_alerts as $aiba_alert_row ) : ?>
+						<?php
+						$aiba_st = isset( $aiba_alert_row->status ) ? (string) $aiba_alert_row->status : '';
+						$aiba_ac = isset( $aiba_alert_row->action ) ? (string) $aiba_alert_row->action : '';
+						$aiba_ms = isset( $aiba_alert_row->message ) ? (string) $aiba_alert_row->message : '';
+						$aiba_ts = isset( $aiba_alert_row->created_at ) ? (string) $aiba_alert_row->created_at : '';
+						?>
+						<li class="aiba-gen-alert aiba-gen-alert--<?php echo esc_attr( 'error' === $aiba_st ? 'error' : 'warning' ); ?>">
+							<span class="aiba-gen-alert-meta"><?php echo esc_html( $aiba_ts . ' · ' . $aiba_ac . ' · ' . $aiba_st ); ?></span>
+							<span class="aiba-gen-alert-msg"><?php echo esc_html( $aiba_ms ); ?></span>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		<?php endif; ?>
+	</div>
 
 	<form id="aiba-generate-form" class="aiba-form aiba-form-card" method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
 		<?php /* Required so a native GET submit still opens this screen (not a blank admin.php). */ ?>

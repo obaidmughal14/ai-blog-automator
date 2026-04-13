@@ -216,6 +216,46 @@
 	margin-top: 0;
 }
 
+/* Generate screen: log-derived blockers */
+.wrap.aiba-wrap .aiba-generate-alerts-mount {
+	margin-bottom: 16px;
+}
+
+.wrap.aiba-wrap .aiba-generate-alerts-mount .aiba-generate-alerts {
+	margin: 0 0 12px;
+	padding: 10px 14px;
+}
+
+.wrap.aiba-wrap .aiba-generate-alerts-mount .aiba-generate-alerts--live {
+	margin-bottom: 12px;
+}
+
+.wrap.aiba-wrap .aiba-generate-alerts-title {
+	margin: 0 0 8px;
+}
+
+.wrap.aiba-wrap .aiba-generate-alerts-list {
+	margin: 0 0 0 1.1em;
+	padding: 0;
+	list-style: disc;
+}
+
+.wrap.aiba-wrap .aiba-gen-alert {
+	margin-bottom: 8px;
+}
+
+.wrap.aiba-wrap .aiba-gen-alert-meta {
+	display: block;
+	font-size: 12px;
+	color: var(--aiba-muted);
+	margin-bottom: 2px;
+}
+
+.wrap.aiba-wrap .aiba-gen-alert-msg {
+	display: block;
+	word-break: break-word;
+}
+
 /* Cards & forms */
 .wrap.aiba-wrap .aiba-form-card,
 .wrap.aiba-wrap .aiba-card {

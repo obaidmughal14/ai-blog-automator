@@ -223,6 +223,34 @@
 			}
 		});
 
+		function showAibaGenerateLiveNotice(message, opts) {
+			opts = opts || {};
+			var isWarning = !!opts.warning;
+			var $mount = $('#aiba-generate-alerts-mount');
+			if (!$mount.length || message === undefined || message === null || message === '') {
+				return;
+			}
+			var logsUrl = $mount.data('logs-url') || '';
+			var $live = $('<div class="notice aiba-generate-alerts aiba-generate-alerts--live"></div>').addClass(
+				isWarning ? 'notice-warning' : 'notice-error'
+			);
+			var $p = $('<p class="aiba-generate-alerts-title"></p>');
+			$p.append($('<strong></strong>').text(opts.title || 'Last attempt'));
+			$p.append(document.createTextNode(' — '));
+			$p.append($('<span class="aiba-gen-alert-msg"></span>').text(String(message)));
+			if (logsUrl) {
+				$p.append(document.createTextNode(' '));
+				$p.append(
+					$('<a></a>')
+						.attr('href', String(logsUrl))
+						.text('View activity logs')
+				);
+			}
+			$live.append($p);
+			$mount.find('.aiba-generate-alerts--live').remove();
+			$mount.prepend($live);
+		}
+
 		function runAibaGenerate() {
 			var $prog = $('#aiba-gen-progress');
 			var $res = $('#aiba-gen-result');
@@ -231,6 +259,7 @@
 			}
 			$prog.prop('hidden', false);
 			$res.empty();
+			$('#aiba-generate-alerts-mount .aiba-generate-alerts--live').remove();
 			$prog.find('.aiba-step').removeClass('aiba-step-done');
 			$prog.find('.aiba-step').first().addClass('aiba-step-done');
 
@@ -258,11 +287,16 @@
 								'">Edit post</a>'
 						);
 					} else {
-						$res.text((res && res.data && res.data.message) || 'Generation failed');
+						var msg = (res && res.data && res.data.message) || 'Generation failed';
+						var isRl = res && res.data && res.data.code === 'rate_limit';
+						$res.text(msg);
+						showAibaGenerateLiveNotice(msg, { warning: isRl });
 					}
 				})
 				.fail(function () {
-					$res.text('Request failed');
+					var msg = 'Request failed (network or server).';
+					$res.text(msg);
+					showAibaGenerateLiveNotice(msg, { warning: false });
 				});
 		}
 
