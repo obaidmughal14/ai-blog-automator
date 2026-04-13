@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 2.0.5
+Stable tag: 2.0.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,11 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 2.0.6 =
+* Generate: fixed activity-log banner missing rows by removing the 14-day SQL cutoff (newest issues always load).
+* Generate: one alert at a time with Previous/Next when multiple log rows exist; empty state explains first-time use.
+* Generate: primary button uses delegated click + HTML5 validation + `data-gen-nonce` fallback if localized script is stripped; AJAX uses `dataType: "json"` and clearer error extraction; spinner next to the button; progress and result moved inside the form card with refreshed styling.
 
 = 2.0.5 =
 * Settings: added a “free API tiers” guidance panel (Auto + multiple keys, word count / posts per day, gpt-4o-mini, Pexels / indexing tips).

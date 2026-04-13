@@ -30,7 +30,11 @@
 		}
 
 		function genNonce() {
-			return admin.genNonce || '';
+			if (admin.genNonce) {
+				return admin.genNonce;
+			}
+			var el = document.getElementById('aiba-generate-form');
+			return el ? el.getAttribute('data-gen-nonce') || '' : '';
 		}
 
 		function adminBase() {
@@ -271,8 +275,15 @@
 		function showAibaGenerateLiveNotice(message, opts) {
 			opts = opts || {};
 			var isWarning = !!opts.warning;
+			if (message === undefined || message === null || message === '') {
+				return;
+			}
+			if (typeof window.aibaGenerateAlertPushLive === 'function') {
+				window.aibaGenerateAlertPushLive(String(message), isWarning);
+				return;
+			}
 			var $mount = $('#aiba-generate-alerts-mount');
-			if (!$mount.length || message === undefined || message === null || message === '') {
+			if (!$mount.length) {
 				return;
 			}
 			var logsUrl = $mount.data('logs-url') || '';
@@ -285,11 +296,7 @@
 			$p.append($('<span class="aiba-gen-alert-msg"></span>').text(String(message)));
 			if (logsUrl) {
 				$p.append(document.createTextNode(' '));
-				$p.append(
-					$('<a></a>')
-						.attr('href', String(logsUrl))
-						.text('View activity logs')
-				);
+				$p.append($('<a></a>').attr('href', String(logsUrl)).text('View activity logs'));
 			}
 			$live.append($p);
 			$mount.find('.aiba-generate-alerts--live').remove();
@@ -297,60 +304,112 @@
 		}
 
 		function runAibaGenerate() {
-			var $prog = $('#aiba-gen-progress');
-			var $res = $('#aiba-gen-result');
-			if (!$prog.length) {
+			var $form = $('#aiba-generate-form');
+			if ($form.length && $form[0].checkValidity && !$form[0].checkValidity()) {
+				$form[0].reportValidity();
 				return;
 			}
-			$prog.prop('hidden', false);
-			$res.empty();
-			$('#aiba-generate-alerts-mount .aiba-generate-alerts--live').remove();
-			$prog.find('.aiba-step').removeClass('aiba-step-done');
-			$prog.find('.aiba-step').first().addClass('aiba-step-done');
+			var $prog = $('#aiba-gen-progress');
+			var $res = $('#aiba-gen-result');
+			var $spin = $('#aiba-gen-spinner');
+			if ($spin.length) {
+				$spin.removeAttr('hidden');
+			}
+			if ($prog.length) {
+				$prog.removeAttr('hidden');
+				$prog.find('.aiba-step').removeClass('aiba-step-done');
+				$prog.find('.aiba-step').first().addClass('aiba-step-done');
+			}
+			if ($res.length) {
+				$res.empty();
+			}
 
-			$.post(ajaxUrl(), {
-				action: 'aiba_generate_post',
-				nonce: genNonce(),
-				topic: $('#aiba_gen_topic').val(),
-				primary_keyword: $('#aiba_gen_primary').val(),
-				secondary_keywords: $('#aiba_gen_secondary').val(),
-				word_count: $('#aiba_gen_wc').val(),
-				tone: $('#aiba_gen_tone').val(),
-				article_template: $('#aiba_gen_format').val(),
-				publish_now: $('#aiba_gen_publish').is(':checked') ? 1 : 0,
-				category_ids: $('#aiba_gen_cats').val() || [],
+			$.ajax({
+				url: ajaxUrl(),
+				type: 'POST',
+				dataType: 'json',
+				data: {
+					action: 'aiba_generate_post',
+					nonce: genNonce(),
+					topic: $('#aiba_gen_topic').val(),
+					primary_keyword: $('#aiba_gen_primary').val(),
+					secondary_keywords: $('#aiba_gen_secondary').val(),
+					word_count: $('#aiba_gen_wc').val(),
+					tone: $('#aiba_gen_tone').val(),
+					article_template: $('#aiba_gen_format').val(),
+					publish_now: $('#aiba_gen_publish').is(':checked') ? 1 : 0,
+					category_ids: $('#aiba_gen_cats').val() || [],
+				},
 			})
 				.done(function (res) {
-					$prog.find('.aiba-step').addClass('aiba-step-done');
-					if (res && res.success) {
+					if ($spin.length) {
+						$spin.attr('hidden', 'hidden');
+					}
+					if ($prog.length) {
+						$prog.find('.aiba-step').addClass('aiba-step-done');
+					}
+					if (typeof res !== 'object' || res === null) {
+						var bad = 'Unexpected server response.';
+						if ($res.length) {
+							$res.text(bad);
+						}
+						showAibaGenerateLiveNotice(bad, { warning: false });
+						return;
+					}
+					if (res.success) {
 						var d = res.data;
-						$res.html(
-							'<strong>Done.</strong> SEO score (est.): ' +
-								d.seo_score +
-								' · <a href="' +
-								d.post_url +
-								'">Edit post</a>'
-						);
+						if ($res.length) {
+							$res.html(
+								'<strong>Done.</strong> SEO score (est.): ' +
+									d.seo_score +
+									' · <a href="' +
+									d.post_url +
+									'">Edit post</a>'
+							);
+						}
 					} else {
-						var msg = (res && res.data && res.data.message) || 'Generation failed';
-						var isRl = res && res.data && res.data.code === 'rate_limit';
-						$res.text(msg);
+						var msg = (res.data && res.data.message) || 'Generation failed';
+						var isRl = res.data && res.data.code === 'rate_limit';
+						if ($res.length) {
+							$res.text(msg);
+						}
 						showAibaGenerateLiveNotice(msg, { warning: isRl });
 					}
 				})
-				.fail(function () {
+				.fail(function (xhr) {
+					if ($spin.length) {
+						$spin.attr('hidden', 'hidden');
+					}
 					var msg = 'Request failed (network or server).';
-					$res.text(msg);
+					if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+						msg = xhr.responseJSON.data.message;
+					} else if (xhr && xhr.responseText) {
+						try {
+							var j = JSON.parse(xhr.responseText);
+							if (j && j.data && j.data.message) {
+								msg = j.data.message;
+							}
+						} catch (e1) {
+							/* keep default */
+						}
+					}
+					if ($prog.length) {
+						$prog.find('.aiba-step').addClass('aiba-step-done');
+					}
+					if ($res.length) {
+						$res.text(msg);
+					}
 					showAibaGenerateLiveNotice(msg, { warning: false });
 				});
 		}
 
-		$('#aiba-generate-form').on('submit', function (e) {
+		$(document).on('submit', '#aiba-generate-form', function (e) {
 			e.preventDefault();
 			runAibaGenerate();
 		});
 
-		$('#aiba_gen_submit').on('click', function () {
+		$(document).on('click', '#aiba_gen_submit', function (e) {
+			e.preventDefault();
 			runAibaGenerate();
 		});
 	});

@@ -465,7 +465,7 @@ class AIBA_Admin_UI {
 				$trends = $cached;
 			}
 		}
-		$aiba_generate_alerts = self::get_generate_screen_log_alerts( 12 );
+		$aiba_generate_alerts = self::get_generate_screen_log_alerts( 10 );
 		include AIBA_PLUGIN_DIR . 'templates/admin-generate.php';
 	}
 
@@ -626,15 +626,15 @@ class AIBA_Admin_UI {
 	}
 
 	/**
-	 * Recent error/warning log lines that affect or explain generation failures (Generate screen banner).
+	 * Recent error/warning log lines that affect or explain generation failures (Generate screen; newest first).
+	 * No date cutoff so the latest issue always surfaces regardless of site timezone quirks.
 	 *
 	 * @return array<int, object{ id: int, action: string, status: string, message: string, created_at: string }>
 	 */
 	private static function get_generate_screen_log_alerts( int $limit ): array {
 		global $wpdb;
-		$limit   = max( 1, min( 30, $limit ) );
-		$table   = $wpdb->prefix . 'aiba_logs';
-		$since   = date( 'Y-m-d H:i:s', strtotime( '-14 days', (int) current_time( 'timestamp' ) ) );
+		$limit = max( 1, min( 30, $limit ) );
+		$table = $wpdb->prefix . 'aiba_logs';
 		$actions = array(
 			'generate',
 			'llm',
@@ -650,11 +650,11 @@ class AIBA_Admin_UI {
 			'sideload',
 		);
 		$in_actions = implode( ', ', array_fill( 0, count( $actions ), '%s' ) );
-		$sql          = "SELECT id, action, status, message, created_at FROM {$table}
-			WHERE status IN ('error','warning') AND action IN ({$in_actions}) AND created_at >= %s
+		$sql  = "SELECT id, action, status, message, created_at FROM {$table}
+			WHERE status IN ('error','warning') AND action IN ({$in_actions})
 			ORDER BY id DESC LIMIT %d";
-		$args         = array_merge( $actions, array( $since, $limit ) );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.NotPrepared -- placeholders match merged args.
+		$args = array_merge( $actions, array( $limit ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.NotPrepared
 		return $wpdb->get_results( $wpdb->prepare( $sql, $args ) );
 	}
 

@@ -38,14 +38,26 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 
 $aiba_generate_alerts = isset( $aiba_generate_alerts ) && is_array( $aiba_generate_alerts ) ? $aiba_generate_alerts : array();
 $aiba_logs_url        = admin_url( 'admin.php?page=aiba-logs' );
-$aiba_has_err         = false;
+$aiba_gen_nonce       = wp_create_nonce( 'aiba_generate' );
+$aiba_alerts_payload  = array();
 foreach ( $aiba_generate_alerts as $aiba_alert_row ) {
-	if ( isset( $aiba_alert_row->status ) && 'error' === $aiba_alert_row->status ) {
-		$aiba_has_err = true;
-		break;
-	}
+	$aiba_alerts_payload[] = array(
+		'status'     => isset( $aiba_alert_row->status ) ? (string) $aiba_alert_row->status : '',
+		'action'     => isset( $aiba_alert_row->action ) ? (string) $aiba_alert_row->action : '',
+		'message'    => isset( $aiba_alert_row->message ) ? (string) $aiba_alert_row->message : '',
+		'created_at' => isset( $aiba_alert_row->created_at ) ? (string) $aiba_alert_row->created_at : '',
+	);
+}
+$aiba_alerts_json = wp_json_encode(
+	$aiba_alerts_payload,
+	JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE
+);
+if ( ! is_string( $aiba_alerts_json ) ) {
+	$aiba_alerts_json = '[]';
 }
 ?>
+
+	<p class="aiba-gen-intro"><?php esc_html_e( 'Fill in topic and keyword, then run the pipeline. Progress and any API errors appear below the button.', 'ai-blog-automator' ); ?></p>
 
 	<div
 		id="aiba-generate-alerts-mount"
@@ -54,34 +66,99 @@ foreach ( $aiba_generate_alerts as $aiba_alert_row ) {
 		role="region"
 		aria-label="<?php esc_attr_e( 'Generation and API issues from the activity log', 'ai-blog-automator' ); ?>"
 	>
-		<?php if ( ! empty( $aiba_generate_alerts ) ) : ?>
-			<div class="notice <?php echo $aiba_has_err ? 'notice-error' : 'notice-warning'; ?> aiba-generate-alerts">
-				<p class="aiba-generate-alerts-title">
-					<strong><?php esc_html_e( 'Recent issues that may block or affect generation', 'ai-blog-automator' ); ?></strong>
-					<?php
-					echo ' ';
-					echo '<a href="' . esc_url( $aiba_logs_url ) . '">' . esc_html__( 'View activity logs', 'ai-blog-automator' ) . '</a>';
-					?>
-				</p>
-				<ul class="aiba-generate-alerts-list">
-					<?php foreach ( $aiba_generate_alerts as $aiba_alert_row ) : ?>
-						<?php
-						$aiba_st = isset( $aiba_alert_row->status ) ? (string) $aiba_alert_row->status : '';
-						$aiba_ac = isset( $aiba_alert_row->action ) ? (string) $aiba_alert_row->action : '';
-						$aiba_ms = isset( $aiba_alert_row->message ) ? (string) $aiba_alert_row->message : '';
-						$aiba_ts = isset( $aiba_alert_row->created_at ) ? (string) $aiba_alert_row->created_at : '';
-						?>
-						<li class="aiba-gen-alert aiba-gen-alert--<?php echo esc_attr( 'error' === $aiba_st ? 'error' : 'warning' ); ?>">
-							<span class="aiba-gen-alert-meta"><?php echo esc_html( $aiba_ts . ' · ' . $aiba_ac . ' · ' . $aiba_st ); ?></span>
-							<span class="aiba-gen-alert-msg"><?php echo esc_html( $aiba_ms ); ?></span>
-						</li>
-					<?php endforeach; ?>
-				</ul>
-			</div>
-		<?php endif; ?>
+		<div
+			id="aiba-generate-alert-slot"
+			class="aiba-generate-alert-slot"
+			data-empty-label="<?php echo esc_attr( __( 'No logged issues yet. If a provider blocks generation, the latest message will show here after you try.', 'ai-blog-automator' ) ); ?>"
+		></div>
+		<div class="aiba-generate-alert-nav" id="aiba-generate-alert-nav" hidden>
+			<button type="button" class="button" id="aiba-gen-alert-prev" aria-label="<?php esc_attr_e( 'Previous issue', 'ai-blog-automator' ); ?>"><?php esc_html_e( 'Previous', 'ai-blog-automator' ); ?></button>
+			<span class="aiba-generate-alert-pos" id="aiba-gen-alert-pos" aria-live="polite"></span>
+			<button type="button" class="button" id="aiba-gen-alert-next" aria-label="<?php esc_attr_e( 'Next issue', 'ai-blog-automator' ); ?>"><?php esc_html_e( 'Next', 'ai-blog-automator' ); ?></button>
+		</div>
 	</div>
+	<script type="application/json" id="aiba-generate-alert-data"><?php echo $aiba_alerts_json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON-LD style payload, hex-escaped. ?></script>
+	<script>
+	(function () {
+		var dataEl = document.getElementById('aiba-generate-alert-data');
+		var slot = document.getElementById('aiba-generate-alert-slot');
+		var nav = document.getElementById('aiba-generate-alert-nav');
+		var posEl = document.getElementById('aiba-gen-alert-pos');
+		var btnP = document.getElementById('aiba-gen-alert-prev');
+		var btnN = document.getElementById('aiba-gen-alert-next');
+		var mount = document.getElementById('aiba-generate-alerts-mount');
+		var logsUrl = mount ? mount.getAttribute('data-logs-url') : '';
+		var L = {
+			title: <?php echo wp_json_encode( __( 'Latest from activity log', 'ai-blog-automator' ) ); ?>,
+			logs: <?php echo wp_json_encode( __( 'Activity logs', 'ai-blog-automator' ) ); ?>,
+			last: <?php echo wp_json_encode( __( 'Last attempt', 'ai-blog-automator' ) ); ?>
+		};
+		if (!dataEl || !slot) {
+			return;
+		}
+		var items = [];
+		try {
+			items = JSON.parse(dataEl.textContent || '[]') || [];
+		} catch (e) {
+			items = [];
+		}
+		var idx = 0;
+		function esc(s) {
+			var d = document.createElement('div');
+			d.textContent = s == null ? '' : String(s);
+			return d.innerHTML;
+		}
+		function render() {
+			if (!items.length) {
+				slot.innerHTML = '<div class="aiba-gen-ready-card"><span class="dashicons dashicons-yes-alt aiba-gen-ready-icon" aria-hidden="true"></span><p class="aiba-gen-ready-text">' + esc(slot.getAttribute('data-empty-label') || '') + '</p></div>';
+				if (nav) {
+					nav.hidden = true;
+				}
+				return;
+			}
+			var it = items[idx];
+			var isErr = it.status === 'error';
+			var noticeClass = isErr ? 'notice-error' : 'notice-warning';
+			var meta = esc((it.created_at || '') + ' · ' + (it.action || '') + ' · ' + (it.status || ''));
+			var msg = esc(it.message || '');
+			var logs = logsUrl ? ' <a href="' + esc(logsUrl) + '">' + esc(L.logs) + '</a>' : '';
+			slot.innerHTML = '<div class="notice ' + noticeClass + ' aiba-generate-alerts"><p class="aiba-generate-alerts-title"><strong>' + esc(L.title) + '</strong>' + logs + '</p><p class="aiba-gen-alert-meta">' + meta + '</p><p class="aiba-gen-alert-msg">' + msg + '</p></div>';
+			if (nav) {
+				nav.hidden = items.length < 2;
+				if (posEl) {
+					posEl.textContent = String(idx + 1) + ' / ' + String(items.length);
+				}
+			}
+		}
+		render();
+		if (btnP) {
+			btnP.addEventListener('click', function () {
+				idx = (idx - 1 + items.length) % items.length;
+				render();
+			});
+		}
+		if (btnN) {
+			btnN.addEventListener('click', function () {
+				idx = (idx + 1) % items.length;
+				render();
+			});
+		}
+		window.aibaGenerateAlertLabels = L;
+		window.aibaGenerateAlertPushLive = function (message, isWarning) {
+			if (!slot || !message) {
+				return;
+			}
+			var noticeClass = isWarning ? 'notice-warning' : 'notice-error';
+			var logs = logsUrl ? ' <a href="' + esc(logsUrl) + '">' + esc(L.logs) + '</a>' : '';
+			slot.innerHTML = '<div class="notice ' + noticeClass + ' aiba-generate-alerts aiba-generate-alerts--live"><p class="aiba-generate-alerts-title"><strong>' + esc(L.last) + '</strong>' + logs + '</p><p class="aiba-gen-alert-msg">' + esc(message) + '</p></div>';
+			if (nav) {
+				nav.hidden = true;
+			}
+		};
+	})();
+	</script>
 
-	<form id="aiba-generate-form" class="aiba-form aiba-form-card" method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
+	<form id="aiba-generate-form" class="aiba-form aiba-form-card aiba-gen-form" method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" data-gen-nonce="<?php echo esc_attr( $aiba_gen_nonce ); ?>">
 		<?php /* Required so a native GET submit still opens this screen (not a blank admin.php). */ ?>
 		<input type="hidden" name="page" value="aiba-generate" />
 		<table class="form-table">
@@ -180,24 +257,31 @@ foreach ( $aiba_generate_alerts as $aiba_alert_row ) {
 				</td>
 			</tr>
 		</table>
-		<p>
-			<button type="button" class="button button-primary button-large" id="aiba_gen_submit"><?php esc_html_e( 'Generate & Publish', 'ai-blog-automator' ); ?></button>
-		</p>
+		<div class="aiba-gen-actions">
+			<button type="button" class="button button-primary button-hero" id="aiba_gen_submit">
+				<span class="dashicons dashicons-admin-post aiba-gen-btn-icon" aria-hidden="true"></span>
+				<span class="aiba-gen-btn-label"><?php esc_html_e( 'Generate post', 'ai-blog-automator' ); ?></span>
+			</button>
+			<span id="aiba-gen-spinner" class="aiba-gen-spinner" hidden aria-hidden="true"></span>
+		</div>
+		<div id="aiba-gen-progress" class="aiba-progress aiba-gen-progress" hidden>
+			<p class="aiba-gen-progress-title"><?php esc_html_e( 'Progress', 'ai-blog-automator' ); ?></p>
+			<ol>
+				<li class="aiba-step" data-step="outline"><?php esc_html_e( 'Outline & sections', 'ai-blog-automator' ); ?></li>
+				<li class="aiba-step" data-step="assemble"><?php esc_html_e( 'Assemble & save post', 'ai-blog-automator' ); ?></li>
+				<li class="aiba-step" data-step="done"><?php esc_html_e( 'Done', 'ai-blog-automator' ); ?></li>
+			</ol>
+			<p id="aiba-gen-result" class="aiba-gen-result" role="status" aria-live="polite"></p>
+		</div>
 	</form>
 	<script>
 	(function () {
 		var f = document.getElementById('aiba-generate-form');
-		if (!f) return;
-		f.addEventListener('submit', function (e) { e.preventDefault(); });
+		if (f) {
+			f.addEventListener('submit', function (e) {
+				e.preventDefault();
+			});
+		}
 	})();
 	</script>
-
-	<div id="aiba-gen-progress" class="aiba-progress aiba-form-card" hidden>
-		<ol>
-			<li class="aiba-step" data-step="outline"><?php esc_html_e( 'Outline & sections', 'ai-blog-automator' ); ?></li>
-			<li class="aiba-step" data-step="assemble"><?php esc_html_e( 'Assemble & save post', 'ai-blog-automator' ); ?></li>
-			<li class="aiba-step" data-step="done"><?php esc_html_e( 'Done', 'ai-blog-automator' ); ?></li>
-		</ol>
-		<p id="aiba-gen-result"></p>
-	</div>
 <?php require AIBA_PLUGIN_DIR . 'templates/partials/shell-end.php'; ?>
