@@ -34,5 +34,24 @@ $aiba_page_title = isset( $aiba_page_title ) ? (string) $aiba_page_title : '';
 				</div>
 			<?php endif; ?>
 		</div>
+		<?php
+		$aiba_product_url = defined( 'AIBA_PRODUCT_URL' ) ? AIBA_PRODUCT_URL : 'https://devigontech.com/ai-blog-automator';
+		?>
+		<div class="aiba-hero-quicklinks" role="navigation" aria-label="<?php esc_attr_e( 'Plugin shortcuts', 'ai-blog-automator' ); ?>">
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=aiba-upgrade' ) ); ?>" class="aiba-hero-quicklinks__link" title="<?php esc_attr_e( 'Pricing, premium benefits, and purchase link', 'ai-blog-automator' ); ?>">
+				<span class="dashicons dashicons-star-filled" aria-hidden="true"></span>
+				<?php echo $aiba_premium ? esc_html__( 'Premium info', 'ai-blog-automator' ) : esc_html__( 'Upgrade', 'ai-blog-automator' ); ?>
+			</a>
+			<span class="aiba-hero-quicklinks__sep" aria-hidden="true">·</span>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=aiba-feedback' ) ); ?>" class="aiba-hero-quicklinks__link" title="<?php esc_attr_e( 'Tell us what to improve', 'ai-blog-automator' ); ?>">
+				<span class="dashicons dashicons-format-chat" aria-hidden="true"></span>
+				<?php esc_html_e( 'Feedback', 'ai-blog-automator' ); ?>
+			</a>
+			<span class="aiba-hero-quicklinks__sep" aria-hidden="true">·</span>
+			<a href="<?php echo esc_url( $aiba_product_url ); ?>" class="aiba-hero-quicklinks__link" target="_blank" rel="noopener noreferrer" title="<?php esc_attr_e( 'Opens the product site in a new tab', 'ai-blog-automator' ); ?>">
+				<span class="dashicons dashicons-external" aria-hidden="true"></span>
+				<?php esc_html_e( 'Devigon Tech', 'ai-blog-automator' ); ?>
+			</a>
+		</div>
 	</div>
 	<div class="aiba-panel">

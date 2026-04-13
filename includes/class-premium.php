@@ -13,6 +13,48 @@ defined( 'ABSPATH' ) || exit;
 class AIBA_Premium {
 
 	/**
+	 * Public product / checkout page (override in wp-config if needed).
+	 */
+	public static function product_url(): string {
+		$default = 'https://devigontech.com/ai-blog-automator';
+		$url     = ( defined( 'AIBA_PRODUCT_URL' ) && is_string( AIBA_PRODUCT_URL ) && AIBA_PRODUCT_URL !== '' )
+			? AIBA_PRODUCT_URL
+			: $default;
+		$san = esc_url_raw( $url );
+		return '' !== $san ? $san : esc_url_raw( $default );
+	}
+
+	/**
+	 * Bullet points for Upgrade screen and front-end demo shortcode (marketing copy aligned with code behaviour).
+	 *
+	 * @return array<int, string>
+	 */
+	public static function premium_marketing_points(): array {
+		return array(
+			__( 'Higher effective article length cap when generating (extra headroom on top of your slider target).', 'ai-blog-automator' ),
+			__( 'More in-article images per post and a higher ceiling for automatic internal links.', 'ai-blog-automator' ),
+			__( 'More LLM retries when a provider rate-limits or errors, for smoother queue runs.', 'ai-blog-automator' ),
+			__( 'Longer activity log retention so you can audit generations and failures.', 'ai-blog-automator' ),
+			__( 'One-time unlock code from your purchase is entered under Settings; no subscription hook is required in the free plugin.', 'ai-blog-automator' ),
+		);
+	}
+
+	/**
+	 * Core plugin capabilities for landing / demo shortcode (free tier included).
+	 *
+	 * @return array<int, string>
+	 */
+	public static function product_free_highlights(): array {
+		return array(
+			__( 'Gemini, OpenAI, Claude, or custom OpenAI-compatible APIs with optional Auto failover.', 'ai-blog-automator' ),
+			__( 'One-click Generate and a full content queue with bulk import and staggered publishing.', 'ai-blog-automator' ),
+			__( 'Stock images via Pexels and Unsplash, internal linking, FAQ block, and Article/FAQ schema.', 'ai-blog-automator' ),
+			__( 'SEO title, meta description, and focus keywords for Yoast, Rank Math, AIOSEO, or native meta.', 'ai-blog-automator' ),
+			__( 'Optional Google Indexing API notifications for new URLs.', 'ai-blog-automator' ),
+		);
+	}
+
+	/**
 	 * SHA-256 (hex) of the plaintext access code. Code is not stored in the plugin.
 	 * Override with wp-config: define( 'AIBA_PREMIUM_CODE_HASH', '...' );
 	 */

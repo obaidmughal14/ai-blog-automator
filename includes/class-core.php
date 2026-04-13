@@ -49,6 +49,8 @@ class AIBA_Core {
 		AIBA_Google_Indexing::instance();
 		AIBA_SEO_Handler::init();
 		AIBA_Scheduler::init();
+		AIBA_Frontend_Demo::init();
+		AIBA_Onboarding::init();
 		if ( function_exists( 'is_admin' ) && is_admin() ) {
 			AIBA_Admin_UI::init();
 		}
@@ -81,6 +83,8 @@ class AIBA_Core {
 				'class-llm-templates.php',
 				'class-llm-client.php',
 				'class-premium.php',
+				'class-frontend-demo.php',
+				'class-onboarding.php',
 				'class-trend-fetcher.php',
 				'class-content-generator.php',
 				'class-seo-handler.php',
@@ -119,6 +123,7 @@ class AIBA_Core {
 		self::apply_db_schema();
 		update_option( 'aiba_db_schema', 4 );
 		self::add_default_options();
+		update_option( 'aiba_show_onboarding', '1', false );
 		AIBA_Scheduler::register_cron_schedules_filter();
 		$recurrence = self::map_queue_frequency_to_recurrence( (string) get_option( 'aiba_queue_frequency', 'daily' ) );
 		if ( ! wp_next_scheduled( 'aiba_process_queue' ) ) {

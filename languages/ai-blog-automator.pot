@@ -1,0 +1,42 @@
+# Copyright (C) 2026 Devigon Tech
+# This file is distributed under the same license as the AI Blog Automator plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: AI Blog Automator 2.0.13\n"
+"Report-Msgid-Bugs-To: https://devigontech.com/\n"
+"POT-Creation-Date: 2026-04-13 12:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Generator: manual-starter\n"
+
+#: includes/class-onboarding.php
+msgid "Welcome to AI Blog Automator"
+msgstr ""
+
+#: includes/class-onboarding.php
+msgid "Add at least one LLM API key under Settings, save, then use Test API connections. Use Generate for a single draft or Queue for bulk jobs."
+msgstr ""
+
+#: includes/class-onboarding.php
+msgid "Open Settings"
+msgstr ""
+
+#: includes/class-onboarding.php
+msgid "Open user guide (HTML)"
+msgstr ""
+
+#: includes/class-onboarding.php
+msgid "Upgrade & documentation"
+msgstr ""
+
+#: includes/class-onboarding.php
+msgid "Send feedback"
+msgstr ""
+
+#: includes/class-onboarding.php
+msgid "Dismiss for my user"
+msgstr ""

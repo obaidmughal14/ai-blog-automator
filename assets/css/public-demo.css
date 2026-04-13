@@ -1,0 +1,143 @@
+/**
+ * Front-end shortcode [aiba_product_demo] — scoped to .aiba-public-demo
+ */
+
+.aiba-public-demo {
+	--aiba-demo-accent: #2563eb;
+	--aiba-demo-accent-dark: #1d4ed8;
+	--aiba-demo-surface: #f8fafc;
+	--aiba-demo-border: #e2e8f0;
+	--aiba-demo-text: #0f172a;
+	--aiba-demo-muted: #64748b;
+	max-width: 960px;
+	margin: 1.5rem auto;
+	padding: 0 1rem;
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	color: var(--aiba-demo-text);
+	line-height: 1.55;
+}
+
+.aiba-public-demo__hero {
+	background: linear-gradient(135deg, #f1f5f9 0%, #fff 50%);
+	border: 1px solid var(--aiba-demo-border);
+	border-radius: 16px;
+	padding: 2rem 1.75rem;
+	margin-bottom: 1.5rem;
+	text-align: center;
+}
+
+.aiba-public-demo__title {
+	margin: 0 0 0.75rem;
+	font-size: clamp(1.35rem, 3vw, 1.85rem);
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.aiba-public-demo__lead {
+	margin: 0 auto 1.25rem;
+	max-width: 42rem;
+	color: var(--aiba-demo-muted);
+	font-size: 1.05rem;
+}
+
+.aiba-public-demo__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	justify-content: center;
+}
+
+.aiba-public-demo__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.65rem 1.35rem;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 0.95rem;
+	text-decoration: none;
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.aiba-public-demo__btn--primary {
+	background: var(--aiba-demo-accent);
+	color: #fff;
+	border: 2px solid var(--aiba-demo-accent);
+}
+
+.aiba-public-demo__btn--primary:hover {
+	background: var(--aiba-demo-accent-dark);
+	border-color: var(--aiba-demo-accent-dark);
+	color: #fff;
+}
+
+.aiba-public-demo__btn--ghost {
+	background: #fff;
+	color: var(--aiba-demo-accent);
+	border: 2px solid var(--aiba-demo-border);
+}
+
+.aiba-public-demo__btn--ghost:hover {
+	border-color: var(--aiba-demo-accent);
+	color: var(--aiba-demo-accent-dark);
+}
+
+.aiba-public-demo__subhead {
+	margin: 1.5rem 0 0.75rem;
+	font-size: 1.05rem;
+	font-weight: 600;
+}
+
+.aiba-public-demo__subhead--premium {
+	color: #6d28d9;
+}
+
+.aiba-public-demo__grid {
+	list-style: none;
+	margin: 0 0 0.5rem;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 0.75rem;
+}
+
+.aiba-public-demo__grid--premium .aiba-public-demo__card {
+	border-color: rgba(109, 40, 217, 0.25);
+	background: linear-gradient(180deg, #faf5ff 0%, #fff 100%);
+}
+
+.aiba-public-demo__card {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.6rem;
+	margin: 0;
+	padding: 0.85rem 1rem;
+	background: var(--aiba-demo-surface);
+	border: 1px solid var(--aiba-demo-border);
+	border-radius: 10px;
+	font-size: 0.95rem;
+}
+
+.aiba-public-demo__check {
+	flex-shrink: 0;
+	color: #16a34a;
+	font-weight: 700;
+	line-height: 1.4;
+}
+
+.aiba-public-demo__hint {
+	margin: 1.5rem 0 0;
+	padding: 0.85rem 1rem;
+	background: #fffbeb;
+	border: 1px solid #fde68a;
+	border-radius: 8px;
+	font-size: 0.875rem;
+	color: #92400e;
+}
+
+.aiba-public-demo__hint code {
+	background: rgba(0, 0, 0, 0.06);
+	padding: 0.15em 0.4em;
+	border-radius: 4px;
+	font-size: 0.9em;
+}

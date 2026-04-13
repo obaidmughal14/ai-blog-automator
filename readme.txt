@@ -1,10 +1,10 @@
 === AI Blog Automator ===
-Contributors: yourname
+Contributors: devigontech
 Tags: ai, blog, gemini, seo, automation, content, openai
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.0.11
+Stable tag: 2.0.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,10 @@ Full administrator documentation ships with the plugin:
 
 * `docs/USER-GUIDE.html` — Open in a browser for a **styled guide with SVG figures** (sidebar, API settings, queue bulk, generate flow, pipeline diagram).
 * `docs/USER-GUIDE.txt` — Same material as **plain text**, with paths to the same figures for offline reading.
+* **Upgrade / Feedback** — Under **AI Automator** in wp-admin: purchase and premium help on **Upgrade**; product feedback on **Feedback** (also linked in the hero bar on every plugin screen).
+* **Marketing shortcode** — `[aiba_product_demo]` outputs a feature block for your public product page (see **Upgrade** screen in the plugin for the exact snippet).
+* **CodeCanyon pack** — `packaging/envato/` contains listing HTML, installation, credits, privacy, support template, screenshot checklist, and zip build notes for authors.
+* **Welcome notice** — After activation, administrators see a dismissible onboarding notice on AI Automator screens.
 * `LICENSE` — **GPLv2 or later** (copyright and license notice; full text linked from License URI above).
 
 **Requirements**
@@ -83,6 +87,18 @@ Illustrations ship as **SVG** files in `docs/images/` (open beside the HTML guid
 If you previously relied on Unsplash without a Pexels key, add an **Unsplash Access Key** under Settings → API. Review `docs/USER-GUIDE.html` for image and queue behaviour changes in recent releases.
 
 == Changelog ==
+
+= 2.0.13 =
+* Envato author pack in `packaging/envato/` (item description HTML, buyer install guide, credits, privacy, support template, screenshot/video scripts, submission + zip build checklists).
+* `docs/COMPLIANCE-SELF-AUDIT.md` for pre-release security/i18n checks.
+* `languages/ai-blog-automator.pot` starter + `languages/readme.txt` for regenerating translations with WP-CLI.
+* Welcome admin notice after activation (per-user dismiss); `Tested up to` raised to 6.8.
+
+= 2.0.12 =
+* Admin: new **Upgrade** and **Feedback** submenu pages; hero bar quick links (Upgrade, Feedback, product site) on all AI Automator screens.
+* Feedback form stores the last 50 submissions in `aiba_feedback_inbox` and emails the site admin; optional name and reply-to email.
+* Marketing: `AIBA_PRODUCT_URL` constant (default https://devigontech.com/ai-blog-automator); front-end shortcode `[aiba_product_demo]` for product/demo pages with scoped CSS.
+* Docs: `AIBA_Premium::product_free_highlights()` and premium benefit copy for Upgrade screen and shortcode.
 
 = 2.0.11 =
 * Documentation: fixed SVG guide figures that failed to render (invalid XML control characters and corrupted placeholder text in `docs/images/*.svg`); clarified `USER-GUIDE.html` must stay beside `docs/images/`. HTML guide uses `<base href="./">` and `./images/` paths for reliable figure loading.

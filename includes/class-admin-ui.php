@@ -38,6 +38,7 @@ class AIBA_Admin_UI {
 		add_action( 'admin_post_aiba_add_queue', array( __CLASS__, 'handle_add_queue' ) );
 		add_action( 'admin_post_aiba_bulk_queue_keywords', array( __CLASS__, 'handle_bulk_queue_keywords' ) );
 		add_action( 'admin_post_aiba_premium_unlock', array( __CLASS__, 'handle_premium_unlock' ) );
+		add_action( 'admin_post_aiba_feedback_submit', array( __CLASS__, 'handle_feedback_submit' ) );
 		add_filter( 'admin_body_class', array( __CLASS__, 'admin_body_class' ) );
 	}
 
@@ -53,6 +54,8 @@ class AIBA_Admin_UI {
 			'ai-blog-automator_page_aiba-queue',
 			'ai-blog-automator_page_aiba-settings',
 			'ai-blog-automator_page_aiba-logs',
+			'ai-blog-automator_page_aiba-upgrade',
+			'ai-blog-automator_page_aiba-feedback',
 		);
 	}
 
@@ -110,6 +113,24 @@ class AIBA_Admin_UI {
 			'manage_options',
 			'aiba-logs',
 			array( __CLASS__, 'render_logs' )
+		);
+
+		add_submenu_page(
+			'ai-blog-automator',
+			__( 'Upgrade', 'ai-blog-automator' ),
+			__( 'Upgrade', 'ai-blog-automator' ),
+			'manage_options',
+			'aiba-upgrade',
+			array( __CLASS__, 'render_upgrade' )
+		);
+
+		add_submenu_page(
+			'ai-blog-automator',
+			__( 'Feedback', 'ai-blog-automator' ),
+			__( 'Feedback', 'ai-blog-automator' ),
+			'manage_options',
+			'aiba-feedback',
+			array( __CLASS__, 'render_feedback' )
 		);
 	}
 
@@ -539,6 +560,115 @@ class AIBA_Admin_UI {
 		$to     = isset( $_GET['aiba_to'] ) ? sanitize_text_field( wp_unslash( $_GET['aiba_to'] ) ) : '';
 		$rows   = self::get_log_rows( $status, $action, $from, $to );
 		include AIBA_PLUGIN_DIR . 'templates/admin-logs.php';
+	}
+
+	public static function render_upgrade(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$aiba_premium    = AIBA_Premium::is_active();
+		$aiba_page_title = __( 'Upgrade', 'ai-blog-automator' );
+		$aiba_page_sub   = __( 'Premium benefits, purchase link, and unlock instructions', 'ai-blog-automator' );
+		include AIBA_PLUGIN_DIR . 'templates/admin-upgrade.php';
+	}
+
+	public static function render_feedback(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$aiba_premium          = AIBA_Premium::is_active();
+		$aiba_page_title       = __( 'Feedback', 'ai-blog-automator' );
+		$aiba_page_sub         = __( 'Help improve AI Blog Automator', 'ai-blog-automator' );
+		$aiba_feedback_inbox   = self::get_feedback_inbox();
+		include AIBA_PLUGIN_DIR . 'templates/admin-feedback.php';
+	}
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function get_feedback_inbox(): array {
+		$raw = get_option( 'aiba_feedback_inbox', array() );
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+		return array_slice( $raw, 0, 25 );
+	}
+
+	/**
+	 * Store feedback and email site admin.
+	 */
+	public static function handle_feedback_submit(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to submit feedback.', 'ai-blog-automator' ) );
+		}
+		check_admin_referer( 'aiba_feedback_submit' );
+
+		$message = isset( $_POST['aiba_feedback_message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['aiba_feedback_message'] ) ) : '';
+		if ( strlen( $message ) < 10 ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=aiba-feedback&aiba_feedback_err=1' ) );
+			exit;
+		}
+
+		$topic = isset( $_POST['aiba_feedback_topic'] ) ? sanitize_key( wp_unslash( $_POST['aiba_feedback_topic'] ) ) : 'other';
+		$allowed_topics = array( 'bug', 'feature', 'ux', 'seo', 'other' );
+		if ( ! in_array( $topic, $allowed_topics, true ) ) {
+			$topic = 'other';
+		}
+
+		$name  = isset( $_POST['aiba_feedback_name'] ) ? sanitize_text_field( wp_unslash( $_POST['aiba_feedback_name'] ) ) : '';
+		$email = isset( $_POST['aiba_feedback_email'] ) ? sanitize_email( wp_unslash( $_POST['aiba_feedback_email'] ) ) : '';
+		$user  = wp_get_current_user();
+
+		$entry = array(
+			't'       => time(),
+			'user_id' => (int) $user->ID,
+			'login'   => $user->user_login,
+			'topic'   => $topic,
+			'name'    => $name,
+			'email'   => $email,
+			'message' => $message,
+			'site'    => home_url(),
+			'plugin'  => AIBA_VERSION,
+		);
+
+		$inbox = get_option( 'aiba_feedback_inbox', array() );
+		if ( ! is_array( $inbox ) ) {
+			$inbox = array();
+		}
+		array_unshift( $inbox, $entry );
+		$inbox = array_slice( $inbox, 0, 50 );
+		update_option( 'aiba_feedback_inbox', $inbox, false );
+
+		$admin_mail = (string) get_option( 'admin_email' );
+		if ( is_email( $admin_mail ) ) {
+			$subj = sprintf(
+				/* translators: 1: site hostname, 2: topic slug */
+				__( '[AI Blog Automator] Feedback from %1$s (%2$s)', 'ai-blog-automator' ),
+				wp_parse_url( home_url(), PHP_URL_HOST ) ?: 'site',
+				$topic
+			);
+			$body  = "Topic: {$topic}\n";
+			$body .= 'User: ' . $user->user_login . " (ID {$user->ID})\n";
+			if ( $name !== '' ) {
+				$body .= 'Name: ' . $name . "\n";
+			}
+			if ( $email !== '' ) {
+				$body .= 'Email: ' . $email . "\n";
+			}
+			$body .= 'Site: ' . home_url() . "\n";
+			$body .= 'Plugin: ' . AIBA_VERSION . "\n\n";
+			$body .= $message . "\n";
+
+			$headers = array();
+			if ( $email !== '' && is_email( $email ) ) {
+				$headers[] = 'Reply-To: ' . $email;
+			}
+
+			wp_mail( $admin_mail, $subj, $body, $headers );
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=aiba-feedback&aiba_feedback_sent=1' ) );
+		exit;
 	}
 
 	/**

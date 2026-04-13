@@ -18,7 +18,7 @@ $detected = AIBA_SEO_Handler::detect_seo_plugin();
 require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 ?>
 
-	<div class="aiba-card aiba-card-premium-access">
+	<div class="aiba-card aiba-card-premium-access" id="aiba-premium-access">
 		<?php if ( AIBA_Premium::is_active() ) : ?>
 			<div class="aiba-premium-active-banner">
 				<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
