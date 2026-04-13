@@ -66,6 +66,7 @@
 						'Claude: ' + (d.claude_skipped ? 'skip' : d.claude ? 'OK' : 'Fail'),
 						'Custom: ' + (d.custom_skipped ? 'skip' : d.custom ? 'OK' : 'Fail'),
 						'Pexels: ' + (d.pexels_skipped ? 'skip' : d.pexels ? 'OK' : 'Fail'),
+						'Unsplash: ' + (d.unsplash_skipped ? 'skip' : d.unsplash ? 'OK' : 'Fail'),
 						'Google: ' + (d.google_skipped ? 'skip' : d.google ? 'OK' : 'Fail'),
 					];
 					$('#aiba-test-result').text(parts.join(' · '));

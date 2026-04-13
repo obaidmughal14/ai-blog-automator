@@ -61,7 +61,7 @@ class AIBA_SEO_Handler {
 	 * Apply SEO meta to post.
 	 *
 	 * @param int                  $post_id Post ID.
-	 * @param array<string, mixed> $seo_data Data keys: primary_keyword, meta_description, seo_title, content (optional).
+	 * @param array<string, mixed> $seo_data Data keys: primary_keyword, secondary_keywords (string[]), meta_description, seo_title, content (optional).
 	 * @param bool                 $force Overwrite existing plugin meta.
 	 */
 	public function apply_seo( int $post_id, array $seo_data, bool $force = false ): void {
@@ -101,8 +101,13 @@ class AIBA_SEO_Handler {
 			if ( $force || '' === (string) get_post_meta( $post_id, '_aioseo_description', true ) ) {
 				update_post_meta( $post_id, '_aioseo_description', $desc );
 			}
+			$secondary = self::sanitize_secondary_keywords_list( $seo_data, $primary );
+			$kw_line   = $primary;
+			if ( ! empty( $secondary ) ) {
+				$kw_line = implode( ', ', array_unique( array_merge( array( $primary ), $secondary ) ) );
+			}
 			if ( $force || '' === (string) get_post_meta( $post_id, '_aioseo_keywords', true ) ) {
-				update_post_meta( $post_id, '_aioseo_keywords', $primary );
+				update_post_meta( $post_id, '_aioseo_keywords', $kw_line );
 			}
 		} else {
 			update_post_meta( $post_id, '_aiba_seo_title', $title );
@@ -110,7 +115,69 @@ class AIBA_SEO_Handler {
 			update_post_meta( $post_id, '_aiba_focus_keyword', $primary );
 		}
 
-		$this->inject_schema( $post_id, $seo_data );
+		$this->apply_secondary_seo_keywords( $post_id, $mode, $primary, $seo_data, $force );
+
+		// Schema is injected once in the publisher after content, images, and thumbnail are final.
+	}
+
+	/**
+	 * @param array<string, mixed> $seo_data Raw SEO payload.
+	 * @return array<int, string>
+	 */
+	private static function sanitize_secondary_keywords_list( array $seo_data, string $primary ): array {
+		$raw = $seo_data['secondary_keywords'] ?? array();
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+		$primary_lower = strtolower( $primary );
+		$out           = array();
+		foreach ( $raw as $item ) {
+			$s = sanitize_text_field( (string) $item );
+			if ( '' === $s || strtolower( $s ) === $primary_lower ) {
+				continue;
+			}
+			$out[] = $s;
+		}
+		return array_values( array_unique( $out ) );
+	}
+
+	/**
+	 * Yoast synonyms, Rank Math additional keywords, native secondary list.
+	 *
+	 * @param array<string, mixed> $seo_data Full payload including secondary_keywords.
+	 */
+	private function apply_secondary_seo_keywords( int $post_id, string $mode, string $primary, array $seo_data, bool $force ): void {
+		$secondary = self::sanitize_secondary_keywords_list( $seo_data, $primary );
+		if ( empty( $secondary ) ) {
+			return;
+		}
+		$syn_line = implode( ', ', $secondary );
+
+		if ( 'yoast' === $mode ) {
+			if ( $force || '' === (string) get_post_meta( $post_id, '_yoast_wpseo_keywordsynonyms', true ) ) {
+				update_post_meta( $post_id, '_yoast_wpseo_keywordsynonyms', wp_json_encode( array( $syn_line ) ) );
+			}
+			if ( defined( 'WPSEO_PREMIUM_VERSION' ) ) {
+				$rows = array();
+				foreach ( $secondary as $kw ) {
+					$rows[] = array(
+						'keyword' => $kw,
+						'score'   => 0,
+					);
+				}
+				if ( $force || '' === (string) get_post_meta( $post_id, '_yoast_wpseo_focuskeywords', true ) ) {
+					update_post_meta( $post_id, '_yoast_wpseo_focuskeywords', wp_json_encode( $rows ) );
+				}
+			}
+		} elseif ( 'rankmath' === $mode ) {
+			if ( $force || '' === (string) get_post_meta( $post_id, 'rank_math_additional_keywords', true ) ) {
+				update_post_meta( $post_id, 'rank_math_additional_keywords', $syn_line );
+			}
+		} elseif ( 'native' === $mode ) {
+			if ( $force || '' === (string) get_post_meta( $post_id, '_aiba_secondary_keywords', true ) ) {
+				update_post_meta( $post_id, '_aiba_secondary_keywords', $syn_line );
+			}
+		}
 	}
 
 	/**

@@ -93,13 +93,11 @@ class AIBA_Content_Generator {
 			$sections_html .= $section_body;
 		}
 
-		$faq_questions = isset( $outline['faq_questions'] ) && is_array( $outline['faq_questions'] ) ? array_map( 'sanitize_text_field', $outline['faq_questions'] ) : array();
-		$faq_html      = '';
-		if ( ! empty( $faq_questions ) ) {
-			$faq_html = $this->generate_faq_html( $outline['title'], $primary, $faq_questions, $language );
-			if ( is_wp_error( $faq_html ) ) {
-				return $faq_html;
-			}
+		$faq_raw       = isset( $outline['faq_questions'] ) && is_array( $outline['faq_questions'] ) ? $outline['faq_questions'] : array();
+		$faq_questions = $this->normalize_faq_questions( $faq_raw, $topic, $primary, 6 );
+		$faq_html      = $this->generate_faq_html( $outline['title'], $primary, $secondary_csv, $faq_questions, $language );
+		if ( is_wp_error( $faq_html ) ) {
+			return $faq_html;
 		}
 
 		$intro = $this->generate_intro( $outline['title'], $primary, $secondary_csv, $tone, $language, $sections );
@@ -107,12 +105,12 @@ class AIBA_Content_Generator {
 			return $intro;
 		}
 
-		$conclusion = $this->generate_conclusion( $outline['title'], $primary, $tone, $language );
-		if ( is_wp_error( $conclusion ) ) {
-			return $conclusion;
+		$closing = $this->generate_closing_paragraphs( $outline['title'], $primary, $secondary_csv, $tone, $language );
+		if ( is_wp_error( $closing ) ) {
+			return $closing;
 		}
 
-		$full_content = $intro . $sections_html . $faq_html . $conclusion;
+		$full_content = $this->polish_editorial_html( $intro . $sections_html . $closing . $faq_html );
 
 		$tags = $this->build_tags( $primary, $secondary );
 		if ( '1' === (string) get_option( 'aiba_ai_tag_expansion', '0' ) ) {
@@ -143,8 +141,97 @@ class AIBA_Content_Generator {
 	}
 
 	/**
-	 * @param 'outline'|'section'|'general' $kind
-	 * @return string|WP_Error
+	 * Shared SEO and style rules appended to model prompts.
+	 */
+	private function editorial_constraints_block( string $primary, string $secondary_csv ): string {
+		$sec = $secondary_csv !== '' ? $secondary_csv : '(none beyond primary)';
+		return sprintf(
+			'Global editorial and SEO rules:
+- Work the primary keyword "%1$s" naturally across intro, body, and closing paragraphs without stuffing.
+- Use every secondary keyword phrase at least once in the article when secondary list is not empty: %2$s
+- Do not use emojis or emoticons.
+- Do not use en dashes or em dashes; use commas, periods, or the word "and" instead.
+- Add at least two outbound links to reputable third party sources (official docs, government, standards bodies, or major publishers) using real https URLs you trust. Use <a href="https://..." rel="noopener noreferrer">anchor</a>. Prefer primary sources.
+- Keep internal link placeholders where requested so the site can wire them to existing posts and pages.',
+			$primary,
+			$sec
+		);
+	}
+
+	/**
+	 * Post-process assembled HTML: strip common emoji ranges, replace typographic dashes.
+	 */
+	private function polish_editorial_html( string $html ): string {
+		$html = (string) preg_replace(
+			'/[\x{1F300}-\x{1F9FF}\x{1F600}-\x{1F64F}\x{1F680}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]/u',
+			'',
+			$html
+		);
+		$dash_map = array(
+			"\u{2013}" => ', ',
+			"\u{2014}" => ', ',
+			"\u{2012}" => ', ',
+		);
+		$html       = strtr( $html, $dash_map );
+		$html       = (string) preg_replace( '/,(\s*,)+/u', ',', $html );
+		return $this->strip_banned_wrapup_headings( $html );
+	}
+
+	/**
+	 * Remove stock wrap-up section titles if the model added them as headings.
+	 */
+	private function strip_banned_wrapup_headings( string $html ): string {
+		$banned = 'conclusion|concluding|final\\s*remarks?|in\\s+summary|to\\s+sum\\s+up|wrapping\\s+up|closing\\s+thoughts|overall';
+		return (string) preg_replace( '/<h[23][^>]*>\s*(?:' . $banned . ')\s*<\/h[23]>/iu', '', $html );
+	}
+
+	/**
+	 * @param array<int, mixed> $from_outline Raw FAQ strings from outline JSON.
+	 * @return array<int, string>
+	 */
+	private function normalize_faq_questions( array $from_outline, string $topic, string $primary, int $min = 6 ): array {
+		$questions = array();
+		foreach ( $from_outline as $q ) {
+			$t = sanitize_text_field( (string) $q );
+			if ( $t !== '' ) {
+				$questions[] = $t;
+			}
+		}
+		$questions = array_values( array_unique( $questions ) );
+		if ( count( $questions ) >= $min ) {
+			return $questions;
+		}
+		$stubs = array(
+			sprintf( __( 'What is the most important thing to know about %s?', 'ai-blog-automator' ), $primary ),
+			sprintf( __( 'Who should use this advice about %s?', 'ai-blog-automator' ), $topic ),
+			sprintf( __( 'How does %s affect everyday choices?', 'ai-blog-automator' ), $primary ),
+			sprintf( __( 'What are common misunderstandings about %s?', 'ai-blog-automator' ), $topic ),
+			sprintf( __( 'What practical steps apply to %s?', 'ai-blog-automator' ), $primary ),
+			sprintf( __( 'Where can readers learn more about %s?', 'ai-blog-automator' ), $topic ),
+			sprintf( __( 'What risks or limits should someone know for %s?', 'ai-blog-automator' ), $primary ),
+			sprintf( __( 'How long does it take to see results with %s?', 'ai-blog-automator' ), $primary ),
+		);
+		foreach ( $stubs as $stub ) {
+			if ( count( $questions ) >= $min ) {
+				break;
+			}
+			$slower = strtolower( $stub );
+			$dup    = false;
+			foreach ( $questions as $existing ) {
+				if ( strtolower( $existing ) === $slower ) {
+					$dup = true;
+					break;
+				}
+			}
+			if ( ! $dup ) {
+				$questions[] = $stub;
+			}
+		}
+		return $questions;
+	}
+
+	/**
+	 * @param 'outline'|'section'|'general' $kind Prompt wrapper kind.
 	 */
 	private function llm_with_wrap( string $prompt, string $kind ) {
 		$prompt = $this->apply_prompt_wrappers( $prompt, $kind );
@@ -198,6 +285,7 @@ class AIBA_Content_Generator {
 Primary keyword: %2$s. Secondary keywords: %3$s.
 Tone: %4$s. Language: %5$s.
 Hook the reader, include the primary keyword naturally, and briefly outline what the article covers: %6$s.
+Include one outbound link to a reputable source when it fits (real https URL, rel="noopener noreferrer").
 Output clean HTML only: <p>, <strong>, <em>. No H1.',
 			$title,
 			$primary,
@@ -206,21 +294,26 @@ Output clean HTML only: <p>, <strong>, <em>. No H1.',
 			$language,
 			$outline_hint
 		);
+		$prompt .= "\n\n" . $this->editorial_constraints_block( $primary, $secondary_csv );
 		$out = $this->llm_with_wrap( $prompt, 'general' );
 		return is_wp_error( $out ) ? $out : wp_kses_post( $out );
 	}
 
-	private function generate_conclusion( string $title, string $primary, string $tone, string $language ): string|WP_Error {
+	private function generate_closing_paragraphs( string $title, string $primary, string $secondary_csv, string $tone, string $language ): string|WP_Error {
 		$prompt = sprintf(
-			'Write a conclusion (150-200 words) for an article titled "%1$s".
-Primary keyword: %2$s. Tone: %3$s. Language: %4$s.
-Summarize key takeaways and include a clear call-to-action.
-Output clean HTML only: <p>, <strong>, <em>.',
+			'Write two or three short closing paragraphs (about 120 to 200 words total) for the article titled "%1$s".
+Primary keyword: %2$s. Secondary keywords to weave in if natural: %3$s. Tone: %4$s. Language: %5$s.
+Requirements:
+- Output clean HTML only using <p>, <strong>, <em>. No headings of any level.
+- Do not use these words or phrases anywhere: conclusion, concluding, final remarks, in summary, to sum up, wrapping up, closing thoughts, overall.
+- Summarize one or two key ideas and end with one clear next step for the reader.',
 			$title,
 			$primary,
+			$secondary_csv,
 			$tone,
 			$language
 		);
+		$prompt .= "\n\n" . $this->editorial_constraints_block( $primary, $secondary_csv );
 		$out = $this->llm_with_wrap( $prompt, 'general' );
 		return is_wp_error( $out ) ? $out : wp_kses_post( $out );
 	}
@@ -228,25 +321,26 @@ Output clean HTML only: <p>, <strong>, <em>.',
 	/**
 	 * @param array<int, string> $faq_questions
 	 */
-	private function generate_faq_html( string $title, string $primary, array $faq_questions, string $language ): string|WP_Error {
+	private function generate_faq_html( string $title, string $primary, string $secondary_csv, array $faq_questions, string $language ): string|WP_Error {
 		$list   = wp_json_encode( $faq_questions );
 		$prompt = sprintf(
-			'Write an FAQ section in HTML for the article "%1$s".
-Use FAQ schema-ready markup:
+			'Write a public FAQ block in HTML for the article "%1$s". These are real questions people type into search; answer each clearly and helpfully.
+Use exactly this FAQ schema-ready structure (no extra H2 title above the block):
 <div class="aiba-faq">
   <div class="aiba-faq-item">
     <h3 class="aiba-faq-question">Question?</h3>
     <div class="aiba-faq-answer"><p>Answer</p></div>
   </div>
 </div>
-Questions to answer (JSON array): %2$s
+You must answer every question in this JSON array with matching order: %2$s
 Language: %3$s
-Keep each answer 50-100 words. Natural language. Include primary keyword "%4$s" in at least one answer.',
+Keep each answer 60 to 120 words. Natural language. Include primary keyword "%4$s" in at least one answer. Do not skip questions.',
 			$title,
 			$list,
 			$language,
 			$primary
 		);
+		$prompt .= "\n\n" . $this->editorial_constraints_block( $primary, $secondary_csv );
 		$out = $this->llm_with_wrap( $prompt, 'general' );
 		return is_wp_error( $out ) ? $out : wp_kses_post( $out );
 	}
@@ -283,7 +377,8 @@ Requirements:
 - Output clean HTML only: use <h2>, <h3>, <p>, <ul>, <ol>, <strong>, <em>
 - Do NOT include the main <h1> title
 - Add a [IMAGE_PLACEHOLDER: %10$s] tag where an image would naturally fit
-- Add [INTERNAL_LINK_PLACEHOLDER: relevant anchor phrase] where an internal link would help (use a short natural anchor)',
+- Where an internal link fits, output ONLY this exact token with a short anchor phrase after the colon (no other wording): [INTERNAL_LINK_PLACEHOLDER: anchor phrase]. Never write the words INTERNAL_LINK_PLACEHOLDER or "placeholder" as plain text, never use an empty token, and never write sentences like "check out our" before the token without a real anchor inside the brackets.
+- Where you state a specific fact or statistic, prefer one outbound link to an authoritative primary source in that section.',
 			$heading,
 			$title,
 			$primary,
@@ -296,6 +391,7 @@ Requirements:
 			$image_suggestion,
 			$format_instruction
 		);
+		$prompt .= "\n\n" . $this->editorial_constraints_block( $primary, $secondary_csv );
 		$out = $this->llm_with_wrap( $prompt, 'section' );
 		return is_wp_error( $out ) ? $out : wp_kses_post( $out );
 	}
@@ -313,6 +409,7 @@ Target Word Count: %4$d
 Tone: %5$s
 Article format / style to respect: %7$s
 Suggest about %6$d in-content image descriptions in image_suggestions.
+Include at least 6 distinct, practical questions in faq_questions (phrases real readers would type into search).
 
 Return ONLY valid JSON:
 {
@@ -326,7 +423,7 @@ Return ONLY valid JSON:
       "notes": "What to cover in this section"
     }
   ],
-  "faq_questions": ["Q1?", "Q2?", "Q3?"],
+  "faq_questions": ["Question 1 readers search?", "Question 2?", "Question 3?", "Question 4?", "Question 5?", "Question 6?"],
   "image_suggestions": ["description for image 1", "description for image 2"]
 }',
 			$topic,
@@ -337,6 +434,8 @@ Return ONLY valid JSON:
 			$image_count,
 			$format_instruction
 		);
+		$prompt .= "\n\n" . $this->editorial_constraints_block( $primary, $secondary_csv );
+		$prompt .= "\nPlan section notes so claims can be supported with outbound links in the draft.";
 
 		$raw = $this->llm_with_wrap( $prompt, 'outline' );
 		if ( is_wp_error( $raw ) ) {

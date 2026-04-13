@@ -116,7 +116,7 @@ class AIBA_Core {
 		// Activation must stay lean: avoid loading LLM/API/admin classes here (sandbox + low memory hosts).
 		require_once AIBA_PLUGIN_DIR . 'includes/class-scheduler.php';
 		self::apply_db_schema();
-		update_option( 'aiba_db_schema', 3 );
+		update_option( 'aiba_db_schema', 4 );
 		self::add_default_options();
 		AIBA_Scheduler::register_cron_schedules_filter();
 		$recurrence = self::map_queue_frequency_to_recurrence( (string) get_option( 'aiba_queue_frequency', 'daily' ) );
@@ -157,11 +157,11 @@ class AIBA_Core {
 	 */
 	public static function maybe_upgrade_db(): void {
 		$ver = (int) get_option( 'aiba_db_schema', 0 );
-		if ( $ver >= 3 ) {
+		if ( $ver >= 4 ) {
 			return;
 		}
 		self::apply_db_schema();
-		update_option( 'aiba_db_schema', 3 );
+		update_option( 'aiba_db_schema', 4 );
 	}
 
 	/**
@@ -241,6 +241,8 @@ class AIBA_Core {
 			keyword varchar(255) NOT NULL,
 			category_id bigint(20) unsigned NOT NULL DEFAULT 0,
 			category_ids text NULL,
+			secondary_keywords text NULL,
+			article_template varchar(64) NOT NULL DEFAULT '',
 			scheduled_at datetime NULL,
 			status varchar(20) NOT NULL DEFAULT 'pending',
 			post_id bigint(20) unsigned NOT NULL DEFAULT 0,
@@ -271,6 +273,7 @@ class AIBA_Core {
 
 		add_option( 'aiba_gemini_api_key', '' );
 		add_option( 'aiba_pexels_api_key', '' );
+		add_option( 'aiba_unsplash_access_key', '' );
 		add_option( 'aiba_google_credentials', '' );
 		add_option( 'aiba_site_niche', '' );
 		add_option( 'aiba_word_count', 1500 );

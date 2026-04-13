@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 2.0.7
+Stable tag: 2.0.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,19 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 2.0.10 =
+* Internal links: every `[INTERNAL_LINK_PLACEHOLDER]` variant (with or without `: anchor`) is replaced with a real `<a>`; invalid LLM rows are skipped; one LLM suggestion pass is reused for placeholders and extra wraps; stray machine tokens are stripped from HTML.
+
+= 2.0.9 =
+* Images: Unsplash Source URLs are retired; featured and in-content images now use the official Unsplash API when you add an Access Key (Settings → API), after Pexels. Attachments are parented to the new post.
+* SEO: secondary keywords sync to Yoast synonyms (and Yoast Premium related keyphrases when Premium is active), Rank Math `rank_math_additional_keywords`, AIOSEO combined keyword list, and native `_aiba_secondary_keywords`.
+* Content: FAQ block is always generated with at least six reader questions (outline padded when needed); closing uses short paragraphs with banned wrap-up wording; headings like “Conclusion” are stripped if present.
+
+= 2.0.8 =
+* Queue: bulk paste supports title, focus keyphrase, other keywords, category IDs, and per-line article format (tabs or pipes), optional daily/weekly staggering from a start date; single “Add to queue” saves other keywords and format.
+* Generation: prompts enforce keyword coverage, no emojis, no en/em dashes (with HTML cleanup pass), and outbound links to reputable sources; internal link suggestions now include published pages as well as posts.
+* Images: Pexels downloads store photographer credit in attachment meta; in-article figures use that caption when present; Unsplash fallback credits the stock search (Google Image scraping is not supported; use Pexels or Unsplash).
 
 = 2.0.7 =
 * Fix: New `admin-boot.js` (vanilla JS, no jQuery) powers Settings tabs, Generate post, Queue bulk Apply, select-all checkboxes, dashboard quick actions, and trend picker — works when jQuery is deferred, blocked, or loads late.

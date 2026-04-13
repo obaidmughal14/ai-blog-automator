@@ -61,25 +61,30 @@ class AIBA_Post_Publisher {
 
 		$topic = sanitize_text_field( (string) ( $settings['topic'] ?? $article_data['title'] ?? '' ) );
 
+		$secondary_kw = isset( $article_data['secondary_keywords'] ) && is_array( $article_data['secondary_keywords'] )
+			? array_values( array_filter( array_map( 'sanitize_text_field', $article_data['secondary_keywords'] ) ) )
+			: array();
+
 		$seo_payload = array(
-			'primary_keyword'  => (string) ( $article_data['primary_keyword'] ?? '' ),
-			'meta_description' => (string) ( $article_data['meta_description'] ?? '' ),
-			'seo_title'        => (string) ( $article_data['seo_title'] ?? $article_data['title'] ?? '' ),
-			'content'          => (string) ( $article_data['content'] ?? '' ),
+			'primary_keyword'    => (string) ( $article_data['primary_keyword'] ?? '' ),
+			'secondary_keywords' => $secondary_kw,
+			'meta_description'   => (string) ( $article_data['meta_description'] ?? '' ),
+			'seo_title'          => (string) ( $article_data['seo_title'] ?? $article_data['title'] ?? '' ),
+			'content'            => (string) ( $article_data['content'] ?? '' ),
 		);
 
 		$this->seo_handler->apply_seo( $post_id, $seo_payload, ! empty( $settings['force_seo'] ) );
 
 		$feature_kw = (string) ( $article_data['primary_keyword'] ?? '' );
 		if ( $feature_kw ) {
-			$thumb_id = $this->image_handler->get_feature_image( (string) $article_data['title'], $feature_kw );
+			$thumb_id = $this->image_handler->get_feature_image( (string) $article_data['title'], $feature_kw, $post_id );
 			if ( $thumb_id ) {
 				set_post_thumbnail( $post_id, $thumb_id );
 			}
 		}
 
 		$suggestions = isset( $article_data['image_suggestions'] ) && is_array( $article_data['image_suggestions'] ) ? $article_data['image_suggestions'] : array();
-		$content     = $this->image_handler->replace_image_placeholders( (string) $article_data['content'], $suggestions );
+		$content     = $this->image_handler->replace_image_placeholders( (string) $article_data['content'], $suggestions, $post_id );
 
 		$content = $this->internal_linker->inject_internal_links(
 			$content,

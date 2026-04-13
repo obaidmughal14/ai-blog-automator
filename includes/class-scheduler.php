@@ -120,16 +120,34 @@ class AIBA_Scheduler {
 			$job_cats = array( (int) $row->category_id );
 		}
 
+		$sec_raw = '';
+		if ( isset( $row->secondary_keywords ) && is_string( $row->secondary_keywords ) ) {
+			$sec_raw = $row->secondary_keywords;
+		}
+		$secondary_kw = array_values(
+			array_filter(
+				array_map(
+					'sanitize_text_field',
+					array_map( 'trim', explode( ',', $sec_raw ) )
+				)
+			)
+		);
+		$job_tpl = '';
+		if ( isset( $row->article_template ) && is_string( $row->article_template ) ) {
+			$job_tpl = trim( $row->article_template );
+		}
+		$job_tpl = $job_tpl !== '' ? AIBA_LLM_Templates::sanitize_article_template( $job_tpl ) : AIBA_LLM_Templates::sanitize_article_template( (string) get_option( 'aiba_article_template', 'standard' ) );
+
 		$job = array(
 			'topic'                => $row->topic,
 			'primary_keyword'      => $row->keyword,
-			'secondary_keywords'   => array(),
+			'secondary_keywords'   => $secondary_kw,
 			'category_id'          => (int) $row->category_id,
 			'category_ids'         => $job_cats,
 			'word_count'           => max( 300, min( 5000, (int) get_option( 'aiba_word_count', 1500 ) ) ),
 			'tone'                 => (string) get_option( 'aiba_tone', 'Professional' ),
 			'language'             => (string) get_option( 'aiba_language', 'English' ),
-			'article_template'     => AIBA_LLM_Templates::sanitize_article_template( (string) get_option( 'aiba_article_template', 'standard' ) ),
+			'article_template'     => $job_tpl,
 		);
 
 		while ( $attempt <= $max_retries ) {

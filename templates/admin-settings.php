@@ -158,7 +158,17 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 				</tr>
 				<tr>
 					<th scope="row"><label for="aiba_pexels_api_key"><?php esc_html_e( 'Pexels API key (optional)', 'ai-blog-automator' ); ?></label></th>
-					<td><input type="password" class="large-text" id="aiba_pexels_api_key" name="aiba_pexels_api_key" value="<?php echo esc_attr( (string) get_option( 'aiba_pexels_api_key', '' ) ); ?>" autocomplete="off" /></td>
+					<td>
+						<input type="password" class="large-text" id="aiba_pexels_api_key" name="aiba_pexels_api_key" value="<?php echo esc_attr( (string) get_option( 'aiba_pexels_api_key', '' ) ); ?>" autocomplete="off" />
+						<p class="description"><?php esc_html_e( 'Used first for featured and in-article images when set.', 'ai-blog-automator' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiba_unsplash_access_key"><?php esc_html_e( 'Unsplash Access Key (optional)', 'ai-blog-automator' ); ?></label></th>
+					<td>
+						<input type="password" class="large-text" id="aiba_unsplash_access_key" name="aiba_unsplash_access_key" value="<?php echo esc_attr( (string) get_option( 'aiba_unsplash_access_key', '' ) ); ?>" autocomplete="off" />
+						<p class="description"><?php esc_html_e( 'Old Unsplash Source URLs are disabled. Create a free app at unsplash.com/oauth/applications and paste the Access Key here as a fallback when Pexels is empty or fails.', 'ai-blog-automator' ); ?></p>
+					</td>
 				</tr>
 				<tr>
 					<th scope="row"><label for="aiba_google_credentials"><?php esc_html_e( 'Google service account JSON', 'ai-blog-automator' ); ?></label></th>
