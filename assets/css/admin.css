@@ -565,12 +565,12 @@
 
 /* Settings: tab + form single card */
 .wrap.aiba-wrap .aiba-settings-tabs-card {
-	border-radius: var(--aiba-radius);
+	border-radius: 16px;
 	border: 1px solid var(--aiba-border);
 	background: var(--aiba-surface);
-	box-shadow: var(--aiba-shadow);
+	box-shadow: 0 4px 28px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.06);
 	overflow: hidden;
-	margin-bottom: 8px;
+	margin-bottom: 12px;
 }
 
 /* Settings tabs (flex strip — core .nav-tab floats are reset) */
@@ -598,16 +598,17 @@
 	align-items: center;
 	justify-content: center;
 	margin: 0;
-	padding: 11px 16px;
-	font-size: 13px;
+	min-height: 44px;
+	padding: 10px 18px;
+	font-size: 14px;
 	font-weight: 500;
 	line-height: 1.25;
 	border: 1px solid transparent;
-	border-radius: 10px 10px 0 0;
+	border-radius: 12px 12px 0 0;
 	background: transparent;
 	color: var(--aiba-muted);
 	text-decoration: none;
-	transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+	transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
 	position: relative;
 }
 
@@ -630,6 +631,7 @@
 	border-color: rgba(148, 163, 184, 0.35);
 	outline: none;
 	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+	transform: translateY(-1px);
 }
 
 .wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab:focus-visible {
@@ -645,6 +647,7 @@
 	box-shadow: 0 -3px 14px rgba(15, 23, 42, 0.06);
 	margin-bottom: -1px;
 	padding-bottom: 12px;
+	transform: none;
 }
 
 .wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab-active::after,
@@ -663,6 +666,28 @@
 
 .wrap.aiba-wrap .aiba-settings-tabs-card > form .form-table {
 	margin-top: 4px;
+}
+
+.wrap.aiba-wrap .aiba-settings-tabs-card > form .form-table tr {
+	border-bottom: 1px solid #f1f5f9;
+}
+
+.wrap.aiba-wrap .aiba-settings-tabs-card > form .form-table tr:last-child {
+	border-bottom: none;
+}
+
+.wrap.aiba-wrap .aiba-settings-tabs-card > form .submit {
+	margin-top: 8px;
+	padding-top: 16px;
+	border-top: 1px solid var(--aiba-border);
+}
+
+.wrap.aiba-wrap .aiba-settings-tabs-card > form .submit .button-primary {
+	padding: 8px 22px;
+	border-radius: 10px;
+	font-size: 14px;
+	font-weight: 600;
+	box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);
 }
 
 .wrap.aiba-wrap .aiba-tab-panel {

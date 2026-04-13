@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 2.0.6
+Stable tag: 2.0.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,12 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 2.0.7 =
+* Fix: New `admin-boot.js` (vanilla JS, no jQuery) powers Settings tabs, Generate post, Queue bulk Apply, select-all checkboxes, dashboard quick actions, and trend picker — works when jQuery is deferred, blocked, or loads late.
+* Fix: `aibaAdmin` is localized on `aiba-boot` so AJAX URLs and nonces are always defined before boot runs; `admin.js` now only handles sliders and “Test API connections”.
+* Fix: Broader `admin_enqueue_scripts` hook matching for edge-case screen IDs (`_page_aiba-*`).
+* UI: Settings card shadow, 16px radius, taller tabs (44px min), form row separators, stronger Save button styling.
 
 = 2.0.6 =
 * Generate: fixed activity-log banner missing rows by removing the 14-day SQL cutoff (newest issues always load).

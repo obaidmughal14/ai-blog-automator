@@ -405,14 +405,25 @@ class AIBA_Admin_UI {
 	// phpcs:enable Generic.CodeAnalysis.UnusedFunctionParameter.Found
 
 	public static function enqueue_assets( string $hook ): void {
-		if ( ! in_array( $hook, self::plugin_page_hooks(), true ) ) {
+		$allowed = self::plugin_page_hooks();
+		$ok      = in_array( $hook, $allowed, true );
+		if ( ! $ok && is_string( $hook ) && ( str_contains( $hook, 'ai-blog-automator' ) || str_contains( $hook, '_page_aiba-' ) ) ) {
+			$ok = true;
+		}
+		if ( ! $ok ) {
 			return;
 		}
 		wp_enqueue_style( 'aiba-admin', AIBA_PLUGIN_URL . 'assets/css/admin.css', array( 'dashicons' ), AIBA_VERSION );
-		wp_enqueue_script( 'jquery' );
-		wp_enqueue_script( 'aiba-admin', AIBA_PLUGIN_URL . 'assets/js/admin.js', array( 'jquery' ), AIBA_VERSION, true );
+		wp_register_script(
+			'aiba-boot',
+			AIBA_PLUGIN_URL . 'assets/js/admin-boot.js',
+			array(),
+			AIBA_VERSION,
+			true
+		);
+		wp_enqueue_script( 'aiba-boot' );
 		wp_localize_script(
-			'aiba-admin',
+			'aiba-boot',
 			'aibaAdmin',
 			array(
 				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
@@ -421,6 +432,8 @@ class AIBA_Admin_UI {
 				'genNonce'  => wp_create_nonce( 'aiba_generate' ),
 			)
 		);
+		wp_enqueue_script( 'jquery' );
+		wp_enqueue_script( 'aiba-admin', AIBA_PLUGIN_URL . 'assets/js/admin.js', array( 'jquery', 'aiba-boot' ), AIBA_VERSION, true );
 	}
 
 	/**
