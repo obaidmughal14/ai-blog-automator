@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,10 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 1.1.2 =
+* Performance: load a minimal PHP stack on public front-end requests; full stack on admin, cron, CLI, activation sandbox, or when generation APIs run.
+* Fix: activation/deactivation hooks accept WordPress multisite arguments; activation no longer fatals on PHP 8+ when the callback receives an extra parameter.
 
 = 1.1.1 =
 * Multiple LLM providers: OpenAI, Claude (Anthropic), and custom OpenAI-compatible endpoints; Auto mode chains fallbacks on rate limits.

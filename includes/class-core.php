@@ -13,11 +13,18 @@ defined( 'ABSPATH' ) || exit;
 class AIBA_Core {
 
 	/**
-	 * Whether includes were loaded.
+	 * Light includes (front-end visitors).
 	 *
 	 * @var bool
 	 */
-	private static bool $includes_loaded = false;
+	private static bool $light_includes_loaded = false;
+
+	/**
+	 * Full stack (admin, cron, CLI, or on demand).
+	 *
+	 * @var bool
+	 */
+	private static bool $full_includes_loaded = false;
 
 	/**
 	 * Shared service instances.
@@ -30,14 +37,43 @@ class AIBA_Core {
 	 * Initialize plugin.
 	 */
 	public static function init(): void {
-		self::load_includes();
+		if ( self::needs_full_bootstrap() ) {
+			self::load_full_includes();
+		} else {
+			self::load_light_includes();
+		}
 		add_action( 'init', array( __CLASS__, 'maybe_upgrade_db' ), 5 );
 		add_action( 'init', array( __CLASS__, 'load_textdomain' ) );
 
 		AIBA_Google_Indexing::instance();
 		AIBA_SEO_Handler::init();
 		AIBA_Scheduler::init();
-		AIBA_Admin_UI::init();
+		if ( function_exists( 'is_admin' ) && is_admin() ) {
+			AIBA_Admin_UI::init();
+		}
+	}
+
+	/**
+	 * Load heavy dependencies only in admin, cron, or CLI — not on public page views.
+	 */
+	private static function needs_full_bootstrap(): bool {
+		// Activation "sandbox" include runs before the plugin is active; load full stack (matches pre-split behavior).
+		if ( defined( 'WP_SANDBOX_SCRAPING' ) && WP_SANDBOX_SCRAPING ) {
+			return true;
+		}
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			return true;
+		}
+		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+			return true;
+		}
+		if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
+			return true;
+		}
+		if ( function_exists( 'is_admin' ) && is_admin() ) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -48,10 +84,24 @@ class AIBA_Core {
 	}
 
 	/**
-	 * Load PHP includes once.
+	 * Minimal files for public requests (meta/schema, cron hooks, indexing on publish).
 	 */
-	public static function load_includes(): void {
-		if ( self::$includes_loaded ) {
+	public static function load_light_includes(): void {
+		if ( self::$light_includes_loaded || self::$full_includes_loaded ) {
+			return;
+		}
+		$dir = AIBA_PLUGIN_DIR . 'includes/';
+		require_once $dir . 'class-google-indexing.php';
+		require_once $dir . 'class-seo-handler.php';
+		require_once $dir . 'class-scheduler.php';
+		self::$light_includes_loaded = true;
+	}
+
+	/**
+	 * All PHP includes (generation, admin, APIs).
+	 */
+	public static function load_full_includes(): void {
+		if ( self::$full_includes_loaded ) {
 			return;
 		}
 		$dir = AIBA_PLUGIN_DIR . 'includes/';
@@ -71,14 +121,24 @@ class AIBA_Core {
 		require_once $dir . 'class-google-indexing.php';
 		require_once $dir . 'class-scheduler.php';
 		require_once $dir . 'class-admin-ui.php';
-		self::$includes_loaded = true;
+		self::$full_includes_loaded  = true;
+		self::$light_includes_loaded = true;
+	}
+
+	/**
+	 * @deprecated Use load_full_includes().
+	 */
+	public static function load_includes(): void {
+		self::load_full_includes();
 	}
 
 	/**
 	 * Activation callback.
+	 *
+	 * @param bool $network_wide Multisite: whether the plugin was network-activated (WordPress passes this).
 	 */
-	public static function activate(): void {
-		self::load_includes();
+	public static function activate( $network_wide = false ): void {
+		self::load_full_includes();
 		self::apply_db_schema();
 		update_option( 'aiba_db_schema', 3 );
 		self::add_default_options();
@@ -159,8 +219,10 @@ class AIBA_Core {
 
 	/**
 	 * Deactivation callback.
+	 *
+	 * @param bool $network_deactivating Multisite: whether the plugin is deactivated network-wide (WordPress passes this).
 	 */
-	public static function deactivate(): void {
+	public static function deactivate( $network_deactivating = false ): void {
 		wp_clear_scheduled_hook( 'aiba_process_queue' );
 		wp_clear_scheduled_hook( 'aiba_daily_trends' );
 	}
@@ -298,6 +360,7 @@ class AIBA_Core {
 	 * Lazy-loaded Gemini client.
 	 */
 	public static function gemini(): AIBA_Gemini_API {
+		self::load_full_includes();
 		if ( ! isset( self::$services['gemini'] ) ) {
 			self::$services['gemini'] = new AIBA_Gemini_API();
 		}
@@ -308,6 +371,7 @@ class AIBA_Core {
 	 * OpenAI client.
 	 */
 	public static function openai(): AIBA_OpenAI_API {
+		self::load_full_includes();
 		if ( ! isset( self::$services['openai'] ) ) {
 			self::$services['openai'] = new AIBA_OpenAI_API();
 		}
@@ -318,6 +382,7 @@ class AIBA_Core {
 	 * Anthropic Claude client.
 	 */
 	public static function anthropic(): AIBA_Anthropic_API {
+		self::load_full_includes();
 		if ( ! isset( self::$services['anthropic'] ) ) {
 			self::$services['anthropic'] = new AIBA_Anthropic_API();
 		}
@@ -328,6 +393,7 @@ class AIBA_Core {
 	 * Custom OpenAI-compatible endpoint.
 	 */
 	public static function custom_llm(): AIBA_Custom_LLM_API {
+		self::load_full_includes();
 		if ( ! isset( self::$services['custom_llm'] ) ) {
 			self::$services['custom_llm'] = new AIBA_Custom_LLM_API();
 		}
@@ -338,6 +404,7 @@ class AIBA_Core {
 	 * Unified LLM (Gemini + optional OpenAI fallback).
 	 */
 	public static function llm(): AIBA_LLM_Client {
+		self::load_full_includes();
 		if ( ! isset( self::$services['llm'] ) ) {
 			self::$services['llm'] = new AIBA_LLM_Client();
 		}
@@ -348,6 +415,7 @@ class AIBA_Core {
 	 * Trend fetcher.
 	 */
 	public static function trend_fetcher(): AIBA_Trend_Fetcher {
+		self::load_full_includes();
 		if ( ! isset( self::$services['trends'] ) ) {
 			self::$services['trends'] = new AIBA_Trend_Fetcher( self::llm() );
 		}
@@ -358,6 +426,7 @@ class AIBA_Core {
 	 * Content generator.
 	 */
 	public static function content_generator(): AIBA_Content_Generator {
+		self::load_full_includes();
 		if ( ! isset( self::$services['content'] ) ) {
 			self::$services['content'] = new AIBA_Content_Generator( self::llm() );
 		}
@@ -368,6 +437,7 @@ class AIBA_Core {
 	 * Post publisher (full pipeline dependencies).
 	 */
 	public static function post_publisher(): AIBA_Post_Publisher {
+		self::load_full_includes();
 		if ( ! isset( self::$services['publisher'] ) ) {
 			self::$services['publisher'] = new AIBA_Post_Publisher(
 				new AIBA_SEO_Handler(),
