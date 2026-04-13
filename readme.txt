@@ -33,7 +33,7 @@ Full administrator documentation ships with the plugin:
 * `docs/USER-GUIDE.txt` — Same material as **plain text**, with paths to the same figures for offline reading.
 * `docs/SECURITY.md` — **Security model**, data handling, and filters for advanced sites (Envato / enterprise review).
 * **Upgrade / Feedback** — Under **AI Automator** in wp-admin: purchase and premium help on **Upgrade**; product feedback on **Feedback** (also linked in the hero bar on every plugin screen).
-* **Marketing shortcode** — `[aiba_product_demo]` outputs a feature block for your public product page (see **Upgrade** screen in the plugin for the exact snippet).
+* **Marketing shortcode** — `[aiba_product_demo]` outputs a feature block plus a **practice checklist**, **step-by-step walkthrough** (same workflows as wp-admin), a **sandbox generate simulator** (browser-only animation; no API calls or posts), and **direct AI Automator links** when an administrator views the page. Optional: `show_walkthrough="no"`, `show_checklist="no"`, `show_sandbox="no"`, `show_admin_links="no"` (see **Upgrade** screen for the snippet).
 * **CodeCanyon pack** — `packaging/envato/` contains listing HTML, installation, credits, privacy, support template, screenshot checklist, and zip build notes for authors.
 * **Welcome notice** — After activation, administrators see a dismissible onboarding notice on AI Automator screens.
 * `LICENSE` — **GPLv2 or later** (copyright and license notice; full text linked from License URI above).

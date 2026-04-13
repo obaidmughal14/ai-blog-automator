@@ -14,6 +14,10 @@ WordPress plugin: AI-assisted long-form articles, queue automation, SEO meta, st
 2. Activate **AI Blog Automator** in **Plugins**.
 3. Open **AI Automator → Settings → API**, add keys, save, and use **Test API connections**.
 
+## Public demo shortcode
+
+`[aiba_product_demo]` renders features plus a **walkthrough**, a **browser-saved checklist**, a **sandbox “generate” simulator** (animated timing only; no API or post), and **wp-admin shortcut links** for logged-in administrators. Optional attributes: `show_walkthrough`, `show_checklist`, `show_sandbox`, `show_admin_links`, `show_shortcode_hint`, `title`.
+
 ## Documentation (in the zip)
 
 | Path | Description |

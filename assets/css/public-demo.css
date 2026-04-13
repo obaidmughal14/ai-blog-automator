@@ -141,3 +141,413 @@
 	border-radius: 4px;
 	font-size: 0.9em;
 }
+
+/* —— Admin shortcuts (visible to logged-in administrators only) —— */
+.aiba-public-demo__admin-strip {
+	margin: 0 0 1.25rem;
+	padding: 1rem 1.1rem;
+	background: #eff6ff;
+	border: 1px solid #bfdbfe;
+	border-radius: 12px;
+	text-align: left;
+}
+
+.aiba-public-demo__admin-strip-title {
+	margin: 0 0 0.65rem;
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--aiba-demo-text);
+}
+
+.aiba-public-demo__admin-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.aiba-public-demo__admin-links a {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.45rem 0.75rem;
+	background: #fff;
+	border: 1px solid #93c5fd;
+	border-radius: 8px;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--aiba-demo-accent);
+	text-decoration: none;
+}
+
+.aiba-public-demo__admin-links a:hover {
+	border-color: var(--aiba-demo-accent);
+	background: #f8fafc;
+}
+
+/* —— Walkthrough (accordion) —— */
+.aiba-demo-flow {
+	margin: 1.75rem 0 0;
+	border: 1px solid var(--aiba-demo-border);
+	border-radius: 14px;
+	overflow: hidden;
+	background: #fff;
+	text-align: left;
+}
+
+.aiba-demo-flow__head {
+	margin: 0 0 0.35rem;
+	padding: 1rem 1.1rem 0;
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--aiba-demo-text);
+}
+
+.aiba-demo-flow__sub {
+	margin: 0;
+	padding: 0 1.1rem 0.75rem;
+	font-size: 0.875rem;
+	color: var(--aiba-demo-muted);
+	line-height: 1.5;
+}
+
+.aiba-demo-flow__step {
+	margin: 0;
+	border-bottom: 1px solid var(--aiba-demo-border);
+}
+
+.aiba-demo-flow__step:last-child {
+	border-bottom: none;
+}
+
+.aiba-demo-flow__step > summary {
+	list-style: none;
+	cursor: pointer;
+	padding: 0.85rem 1rem;
+	font-weight: 700;
+	font-size: 0.92rem;
+	color: var(--aiba-demo-text);
+	background: var(--aiba-demo-surface);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.aiba-demo-flow__step > summary::-webkit-details-marker {
+	display: none;
+}
+
+.aiba-demo-flow__step > summary::after {
+	content: "+";
+	font-weight: 700;
+	color: var(--aiba-demo-accent);
+	font-size: 1.1rem;
+	line-height: 1;
+}
+
+.aiba-demo-flow__step[open] > summary::after {
+	content: "\2212";
+}
+
+.aiba-demo-flow__step > summary:hover {
+	background: #f1f5f9;
+}
+
+.aiba-demo-flow__step[open] > summary {
+	border-bottom: 1px solid var(--aiba-demo-border);
+}
+
+.aiba-demo-flow__inner {
+	padding: 1rem 1.1rem 1.15rem;
+}
+
+.aiba-demo-flow__inner h4 {
+	margin: 0 0 0.55rem;
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--aiba-demo-text);
+}
+
+.aiba-demo-flow__inner ol {
+	margin: 0;
+	padding-left: 1.25rem;
+	color: var(--aiba-demo-text);
+	font-size: 0.9rem;
+}
+
+.aiba-demo-flow__inner li {
+	margin-bottom: 0.5rem;
+}
+
+.aiba-demo-flow__inner li:last-child {
+	margin-bottom: 0;
+}
+
+.aiba-demo-flow__note {
+	margin: 0.85rem 0 0;
+	padding: 0.65rem 0.75rem;
+	background: var(--aiba-demo-surface);
+	border-radius: 8px;
+	font-size: 0.85rem;
+	color: var(--aiba-demo-muted);
+	border-left: 3px solid var(--aiba-demo-accent);
+}
+
+/* —— Practice checklist —— */
+.aiba-demo-checklist {
+	margin: 1.5rem 0 0;
+	padding: 1.1rem 1.15rem;
+	background: #fff;
+	border: 1px solid var(--aiba-demo-border);
+	border-radius: 12px;
+	text-align: left;
+}
+
+.aiba-demo-checklist__title {
+	margin: 0 0 0.5rem;
+	font-size: 1rem;
+	font-weight: 700;
+}
+
+.aiba-demo-checklist__intro {
+	margin: 0 0 0.85rem;
+	font-size: 0.875rem;
+	color: var(--aiba-demo-muted);
+	line-height: 1.5;
+}
+
+.aiba-demo-checklist__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.aiba-demo-checklist__item {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.65rem;
+	margin: 0 0 0.55rem;
+	font-size: 0.9rem;
+	line-height: 1.45;
+}
+
+.aiba-demo-checklist__item:last-child {
+	margin-bottom: 0;
+}
+
+.aiba-demo-checklist__input {
+	flex-shrink: 0;
+	margin-top: 0.2rem;
+	width: 1.05rem;
+	height: 1.05rem;
+	accent-color: var(--aiba-demo-accent);
+	cursor: pointer;
+}
+
+.aiba-demo-checklist__reset {
+	margin-top: 0.85rem;
+	padding: 0.4rem 0.85rem;
+	font-size: 0.8rem;
+	cursor: pointer;
+	border: 1px solid var(--aiba-demo-border);
+	border-radius: 6px;
+	background: #fff;
+	color: var(--aiba-demo-muted);
+}
+
+.aiba-demo-checklist__reset:hover {
+	border-color: var(--aiba-demo-accent);
+	color: var(--aiba-demo-accent);
+}
+
+/* —— Sandbox (fake generate) —— */
+.aiba-demo-sandbox {
+	margin: 1.5rem 0 0;
+	padding: 1.2rem 1.25rem 1.35rem;
+	background: #fff;
+	border: 1px solid #c7d2fe;
+	border-radius: 14px;
+	text-align: left;
+	box-shadow: 0 1px 0 rgba(37, 99, 235, 0.06);
+}
+
+.aiba-demo-sandbox__title {
+	margin: 0 0 0.4rem;
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--aiba-demo-text);
+}
+
+.aiba-demo-sandbox__disclaimer {
+	margin: 0 0 1rem;
+	font-size: 0.82rem;
+	color: var(--aiba-demo-muted);
+	line-height: 1.45;
+}
+
+.aiba-demo-sandbox__fields {
+	display: grid;
+	gap: 0.65rem;
+}
+
+.aiba-demo-sandbox__field {
+	margin: 0;
+}
+
+.aiba-demo-sandbox__field--inline {
+	margin-top: 0.25rem;
+}
+
+.aiba-demo-sandbox__label {
+	display: block;
+	font-size: 0.82rem;
+	font-weight: 600;
+	margin-bottom: 0.3rem;
+	color: var(--aiba-demo-text);
+}
+
+.aiba-demo-sandbox__input {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	padding: 0.55rem 0.65rem;
+	border: 1px solid var(--aiba-demo-border);
+	border-radius: 8px;
+	font-size: 0.95rem;
+}
+
+.aiba-demo-sandbox__input:focus {
+	outline: 2px solid rgba(37, 99, 235, 0.35);
+	outline-offset: 1px;
+	border-color: var(--aiba-demo-accent);
+}
+
+.aiba-demo-sandbox__fakecheck {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.45rem;
+	font-size: 0.85rem;
+	color: var(--aiba-demo-muted);
+	cursor: default;
+}
+
+.aiba-demo-sandbox__checkbox {
+	margin-top: 0.15rem;
+	flex-shrink: 0;
+}
+
+.aiba-demo-sandbox__actions {
+	margin: 1rem 0 0;
+}
+
+.aiba-demo-sandbox__run:disabled {
+	opacity: 0.65;
+	cursor: wait;
+}
+
+.aiba-demo-sandbox__err {
+	margin: 0.65rem 0 0;
+	padding: 0.5rem 0.65rem;
+	background: #fef2f2;
+	border: 1px solid #fecaca;
+	border-radius: 8px;
+	font-size: 0.85rem;
+	color: #991b1b;
+}
+
+.aiba-demo-sandbox__progress {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--aiba-demo-surface);
+	border-radius: 10px;
+	border: 1px solid var(--aiba-demo-border);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.85rem 1rem;
+}
+
+.aiba-demo-sandbox__spinner {
+	width: 2rem;
+	height: 2rem;
+	border: 3px solid #e2e8f0;
+	border-top-color: var(--aiba-demo-accent);
+	border-radius: 50%;
+	animation: aiba-demo-spin 0.75s linear infinite;
+	flex-shrink: 0;
+}
+
+@keyframes aiba-demo-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.aiba-demo-sandbox__status {
+	margin: 0;
+	flex: 1 1 12rem;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--aiba-demo-text);
+}
+
+.aiba-demo-sandbox__steps {
+	flex: 1 1 100%;
+	margin: 0;
+	padding: 0.35rem 0 0 1.2rem;
+	font-size: 0.85rem;
+	color: var(--aiba-demo-muted);
+}
+
+.aiba-demo-sandbox__step {
+	margin: 0.35rem 0;
+	padding-left: 0.15rem;
+	transition: color 0.2s;
+}
+
+.aiba-demo-sandbox__step.is-active {
+	color: var(--aiba-demo-accent);
+	font-weight: 700;
+}
+
+.aiba-demo-sandbox__step.is-done {
+	color: #15803d;
+}
+
+.aiba-demo-sandbox__result {
+	margin-top: 1rem;
+	padding: 1rem 1.1rem;
+	background: #ecfdf5;
+	border: 1px solid #a7f3d0;
+	border-radius: 10px;
+}
+
+.aiba-demo-sandbox__result-title {
+	margin: 0 0 0.5rem;
+	font-size: 1rem;
+	font-weight: 700;
+	color: #065f46;
+}
+
+.aiba-demo-sandbox__result-text {
+	margin: 0 0 0.65rem;
+	font-size: 0.9rem;
+	color: #064e3b;
+	line-height: 1.5;
+}
+
+.aiba-demo-sandbox__result-meta {
+	margin: 0 0 0.65rem;
+	font-size: 0.82rem;
+	color: #047857;
+	word-break: break-word;
+}
+
+.aiba-demo-sandbox__result-actions {
+	margin: 0;
+}
+
+.aiba-demo-sandbox__result-link {
+	display: inline-flex !important;
+	margin-top: 0.25rem;
+	text-decoration: none !important;
+}

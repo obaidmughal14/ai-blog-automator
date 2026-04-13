@@ -82,12 +82,10 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 		</p>
 		<p><code class="aiba-code-block">[aiba_product_demo]</code></p>
 		<p class="description">
-			<?php
-			printf(
-				/* translators: %s: shortcode attribute example */
-				esc_html__( 'Optional: title="Custom headline" show_shortcode_hint="no" hides the yellow hint line.', 'ai-blog-automator' )
-			);
-			?>
+			<?php esc_html_e( 'Visitors see a hands-on walkthrough (same steps as in wp-admin), a practice checklist saved in the browser, and a sandbox “Run demo” area that mimics generate timing without calling any API. Logged-in administrators also get buttons that open Dashboard, Settings, Generate, Queue, and Logs.', 'ai-blog-automator' ); ?>
+		</p>
+		<p class="description">
+			<?php esc_html_e( 'Optional attributes: title="Custom headline", show_shortcode_hint="no", show_walkthrough="no", show_checklist="no", show_admin_links="no", show_sandbox="no".', 'ai-blog-automator' ); ?>
 		</p>
 	</div>
 

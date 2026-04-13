@@ -41,6 +41,10 @@ The plugin is **admin-only** for configuration and generation. It stores **API k
 
 - Generated HTML is intended for trusted editors; publishing uses WordPress post APIs. Follow your site’s **content security** policy for what you allow editors to publish.
 
+## Public marketing shortcode (`[aiba_product_demo]`)
+
+- The **sandbox “Run demo”** block is **entirely client-side**: topic and keyword stay in the visitor’s browser; **no** request is sent to WordPress or to LLM providers for that simulation. Disable it with `show_sandbox="no"` if you do not want that UI.
+
 ## Logging
 
 - Activity entries may contain error messages from providers (no deliberate logging of full API key values). Restrict log access to administrators.
