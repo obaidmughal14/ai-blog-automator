@@ -46,19 +46,19 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 		<?php endif; ?>
 	</div>
 
-	<h2 class="nav-tab-wrapper aiba-tabs">
-		<a href="#aiba-tab-api" class="nav-tab nav-tab-active"><?php esc_html_e( 'API', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-content" class="nav-tab"><?php esc_html_e( 'Content', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-prompts" class="nav-tab"><?php esc_html_e( 'Prompts & formats', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-auto" class="nav-tab"><?php esc_html_e( 'Automation', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-seo" class="nav-tab"><?php esc_html_e( 'SEO', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-adv" class="nav-tab"><?php esc_html_e( 'Advanced', 'ai-blog-automator' ); ?></a>
-	</h2>
+	<div class="nav-tab-wrapper aiba-settings-nav" role="tablist" aria-label="<?php esc_attr_e( 'Settings sections', 'ai-blog-automator' ); ?>">
+		<a href="#aiba-tab-api" id="aiba-tab-link-api" class="nav-tab nav-tab-active" role="tab" aria-selected="true" aria-controls="aiba-tab-api"><?php esc_html_e( 'API', 'ai-blog-automator' ); ?></a>
+		<a href="#aiba-tab-content" id="aiba-tab-link-content" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-content"><?php esc_html_e( 'Content', 'ai-blog-automator' ); ?></a>
+		<a href="#aiba-tab-prompts" id="aiba-tab-link-prompts" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-prompts"><?php esc_html_e( 'Prompts & formats', 'ai-blog-automator' ); ?></a>
+		<a href="#aiba-tab-auto" id="aiba-tab-link-auto" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-auto"><?php esc_html_e( 'Automation', 'ai-blog-automator' ); ?></a>
+		<a href="#aiba-tab-seo" id="aiba-tab-link-seo" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-seo"><?php esc_html_e( 'SEO', 'ai-blog-automator' ); ?></a>
+		<a href="#aiba-tab-adv" id="aiba-tab-link-adv" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-adv"><?php esc_html_e( 'Advanced', 'ai-blog-automator' ); ?></a>
+	</div>
 
 	<form method="post" action="options.php">
 		<?php settings_fields( AIBA_Admin_UI::option_group_name() ); ?>
 
-		<div id="aiba-tab-api" class="aiba-tab-panel">
+		<div id="aiba-tab-api" class="aiba-tab-panel" role="tabpanel" aria-labelledby="aiba-tab-link-api">
 			<table class="form-table">
 				<tr>
 					<th scope="row"><label for="aiba_gemini_api_key"><?php esc_html_e( 'Gemini API key', 'ai-blog-automator' ); ?></label></th>
@@ -151,7 +151,7 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 			<p><button type="button" class="button" id="aiba-test-apis"><?php esc_html_e( 'Test API connections', 'ai-blog-automator' ); ?></button> <span id="aiba-test-result"></span></p>
 		</div>
 
-		<div id="aiba-tab-content" class="aiba-tab-panel" style="display:none">
+		<div id="aiba-tab-content" class="aiba-tab-panel" role="tabpanel" aria-labelledby="aiba-tab-link-content" hidden>
 			<table class="form-table">
 				<tr>
 					<th scope="row"><label for="aiba_site_niche"><?php esc_html_e( 'Site niche / topic', 'ai-blog-automator' ); ?></label></th>
@@ -257,7 +257,7 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 			</table>
 		</div>
 
-		<div id="aiba-tab-prompts" class="aiba-tab-panel" style="display:none">
+		<div id="aiba-tab-prompts" class="aiba-tab-panel" role="tabpanel" aria-labelledby="aiba-tab-link-prompts" hidden>
 			<table class="form-table">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Default article format', 'ai-blog-automator' ); ?></th>
@@ -299,7 +299,7 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 			</table>
 		</div>
 
-		<div id="aiba-tab-auto" class="aiba-tab-panel" style="display:none">
+		<div id="aiba-tab-auto" class="aiba-tab-panel" role="tabpanel" aria-labelledby="aiba-tab-link-auto" hidden>
 			<table class="form-table">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Auto-fetch trends', 'ai-blog-automator' ); ?></th>
@@ -375,7 +375,7 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 			</table>
 		</div>
 
-		<div id="aiba-tab-seo" class="aiba-tab-panel" style="display:none">
+		<div id="aiba-tab-seo" class="aiba-tab-panel" role="tabpanel" aria-labelledby="aiba-tab-link-seo" hidden>
 			<table class="form-table">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Detected SEO plugin', 'ai-blog-automator' ); ?></th>
@@ -432,7 +432,7 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 			</table>
 		</div>
 
-		<div id="aiba-tab-adv" class="aiba-tab-panel" style="display:none">
+		<div id="aiba-tab-adv" class="aiba-tab-panel" role="tabpanel" aria-labelledby="aiba-tab-link-adv" hidden>
 			<table class="form-table">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Delete data on uninstall', 'ai-blog-automator' ); ?></th>

@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,10 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 2.0.2 =
+* Fix: Settings screen tabs — delegate clicks on `.aiba-settings-nav`, toggle the HTML `hidden` property on panels (avoids jQuery `.show()` vs inline `display:none` conflicts), sync `aria-selected`, and support deep-link `#aiba-tab-*` hashes.
+* UI: Restyled settings tabs as a flex “pill strip” with clearer active state and a connected form card below.
 
 = 2.0.1 =
 * Fix: Generate form used default GET without `page=aiba-generate`, so WordPress loaded a blank `admin.php`. Added hidden `page`, explicit `admin.php` action, inline submit prevention, and a `type="button"` primary control wired to AJAX.

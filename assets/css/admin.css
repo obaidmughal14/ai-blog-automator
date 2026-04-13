@@ -342,26 +342,80 @@
 	color: #3730a3;
 }
 
-/* Settings tabs */
-.wrap.aiba-wrap .aiba-tabs {
-	margin: 0 0 4px;
-	border-bottom: 1px solid var(--aiba-border);
-	padding-top: 4px;
-}
-
-.wrap.aiba-wrap .aiba-tabs .nav-tab {
+/* Settings tabs (flex strip — core .nav-tab floats are reset) */
+.wrap.aiba-wrap .aiba-settings-nav.nav-tab-wrapper {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 4px 6px;
+	float: none;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	margin: 0 0 0;
+	padding: 10px 12px 0;
+	border: 1px solid var(--aiba-border);
+	border-bottom: none;
 	border-radius: var(--aiba-radius-sm) var(--aiba-radius-sm) 0 0;
-	margin-bottom: -1px;
+	background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-.wrap.aiba-wrap .aiba-tabs .nav-tab-active {
-	border-bottom-color: var(--aiba-surface);
-	background: var(--aiba-surface);
+.wrap.aiba-wrap .aiba-settings-nav .nav-tab {
+	float: none;
+	display: inline-flex;
+	align-items: center;
+	margin: 0 0 -1px 0;
+	padding: 10px 18px;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.3;
+	border: 1px solid transparent;
+	border-radius: 10px 10px 0 0;
+	background: transparent;
+	color: var(--aiba-muted);
+	text-decoration: none;
+	transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wrap.aiba-wrap .aiba-settings-nav .nav-tab:hover,
+.wrap.aiba-wrap .aiba-settings-nav .nav-tab:focus {
+	color: var(--aiba-text);
+	background: rgba(255, 255, 255, 0.55);
+	border-color: rgba(148, 163, 184, 0.45);
+	outline: none;
+	box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+}
+
+.wrap.aiba-wrap .aiba-settings-nav .nav-tab-active,
+.wrap.aiba-wrap .aiba-settings-nav .nav-tab-active:hover {
+	color: var(--aiba-text);
 	font-weight: 600;
+	background: var(--aiba-surface);
+	border-color: var(--aiba-border) var(--aiba-border) var(--aiba-surface);
+	box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.06);
+}
+
+.wrap.aiba-wrap .aiba-settings-nav + form {
+	margin-top: 0;
+	padding-top: 0;
+	border: 1px solid var(--aiba-border);
+	border-radius: 0 0 var(--aiba-radius-sm) var(--aiba-radius-sm);
+	background: var(--aiba-surface);
+	padding: 8px 20px 20px;
+	box-shadow: var(--aiba-shadow);
+}
+
+.wrap.aiba-wrap .aiba-settings-nav + form .form-table {
+	margin-top: 4px;
 }
 
 .wrap.aiba-wrap .aiba-tab-panel {
-	padding-top: 8px;
+	padding-top: 4px;
+}
+
+.wrap.aiba-wrap .aiba-tab-panel[hidden] {
+	display: none !important;
 }
 
 .wrap.aiba-wrap .aiba-filters {
