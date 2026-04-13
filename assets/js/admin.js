@@ -136,9 +136,7 @@
 			}
 		});
 
-		$('#aiba-generate-form').on('submit', function (e) {
-			e.preventDefault();
-			var $form = $(this);
+		function runAibaGenerate() {
 			var $prog = $('#aiba-gen-progress');
 			var $res = $('#aiba-gen-result');
 			$prog.prop('hidden', false);
@@ -176,6 +174,15 @@
 				.fail(function () {
 					$res.text('Request failed');
 				});
+		}
+
+		$('#aiba-generate-form').on('submit', function (e) {
+			e.preventDefault();
+			runAibaGenerate();
+		});
+
+		$('#aiba_gen_submit').on('click', function () {
+			runAibaGenerate();
 		});
 	});
 })(jQuery);

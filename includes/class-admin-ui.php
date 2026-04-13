@@ -409,6 +409,7 @@ class AIBA_Admin_UI {
 			return;
 		}
 		wp_enqueue_style( 'aiba-admin', AIBA_PLUGIN_URL . 'assets/css/admin.css', array( 'dashicons' ), AIBA_VERSION );
+		wp_enqueue_script( 'jquery' );
 		wp_enqueue_script( 'aiba-admin', AIBA_PLUGIN_URL . 'assets/js/admin.js', array( 'jquery' ), AIBA_VERSION, true );
 		wp_localize_script(
 			'aiba-admin',

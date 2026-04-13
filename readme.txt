@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,10 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 2.0.1 =
+* Fix: Generate form used default GET without `page=aiba-generate`, so WordPress loaded a blank `admin.php`. Added hidden `page`, explicit `admin.php` action, inline submit prevention, and a `type="button"` primary control wired to AJAX.
+* Prefill Generate fields from the query string when present (after a mistaken GET submit). Always enqueue core `jquery` before the admin script.
 
 = 2.0.0 =
 * Rebuilt bootstrap: boot on `plugins_loaded` for normal loads, or immediately when the plugin file is included after `plugins_loaded` (activation sandbox and similar), so hooks always register reliably.
