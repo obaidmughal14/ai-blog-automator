@@ -46,19 +46,36 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 		<?php endif; ?>
 	</div>
 
-	<div class="nav-tab-wrapper aiba-settings-nav" role="tablist" aria-label="<?php esc_attr_e( 'Settings sections', 'ai-blog-automator' ); ?>">
-		<a href="#aiba-tab-api" id="aiba-tab-link-api" class="nav-tab nav-tab-active" role="tab" aria-selected="true" aria-controls="aiba-tab-api"><?php esc_html_e( 'API', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-content" id="aiba-tab-link-content" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-content"><?php esc_html_e( 'Content', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-prompts" id="aiba-tab-link-prompts" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-prompts"><?php esc_html_e( 'Prompts & formats', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-auto" id="aiba-tab-link-auto" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-auto"><?php esc_html_e( 'Automation', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-seo" id="aiba-tab-link-seo" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-seo"><?php esc_html_e( 'SEO', 'ai-blog-automator' ); ?></a>
-		<a href="#aiba-tab-adv" id="aiba-tab-link-adv" class="nav-tab" role="tab" aria-selected="false" aria-controls="aiba-tab-adv"><?php esc_html_e( 'Advanced', 'ai-blog-automator' ); ?></a>
+	<div class="aiba-free-tier-notice" role="note">
+		<div class="aiba-free-tier-notice-inner">
+			<span class="dashicons dashicons-info aiba-free-tier-icon" aria-hidden="true"></span>
+			<div class="aiba-free-tier-copy">
+				<strong class="aiba-free-tier-title"><?php esc_html_e( 'On free tiers for every API?', 'ai-blog-automator' ); ?></strong>
+				<p class="aiba-free-tier-lead"><?php esc_html_e( 'That works — you just need gentler settings so limits do not stack up.', 'ai-blog-automator' ); ?></p>
+				<ul class="aiba-free-tier-list">
+					<li><?php esc_html_e( 'Keep LLM provider on Auto and add every free key you use (Gemini, OpenAI, Anthropic, custom) so the plugin can fall back when one provider rate-limits.', 'ai-blog-automator' ); ?></li>
+					<li><?php esc_html_e( 'Prefer smaller default word counts (Content) and fewer posts per day (Automation); long articles use more tokens per run.', 'ai-blog-automator' ); ?></li>
+					<li><?php esc_html_e( 'For OpenAI, gpt-4o-mini is usually the most quota-friendly model in the list.', 'ai-blog-automator' ); ?></li>
+					<li><?php esc_html_e( 'Pexels and optional Google Indexing have their own free limits — leave indexing off until you need it.', 'ai-blog-automator' ); ?></li>
+				</ul>
+			</div>
+		</div>
 	</div>
 
-	<form method="post" action="options.php">
-		<?php settings_fields( AIBA_Admin_UI::option_group_name() ); ?>
+	<div class="aiba-settings-tabs-card">
+		<div class="nav-tab-wrapper aiba-settings-nav" role="tablist" aria-label="<?php esc_attr_e( 'Settings sections', 'ai-blog-automator' ); ?>">
+			<a href="#aiba-tab-api" id="aiba-tab-link-api" class="nav-tab nav-tab-active" role="tab" tabindex="0" aria-selected="true" aria-controls="aiba-tab-api"><?php esc_html_e( 'API', 'ai-blog-automator' ); ?></a>
+			<a href="#aiba-tab-content" id="aiba-tab-link-content" class="nav-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="aiba-tab-content"><?php esc_html_e( 'Content', 'ai-blog-automator' ); ?></a>
+			<a href="#aiba-tab-prompts" id="aiba-tab-link-prompts" class="nav-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="aiba-tab-prompts"><?php esc_html_e( 'Prompts & formats', 'ai-blog-automator' ); ?></a>
+			<a href="#aiba-tab-auto" id="aiba-tab-link-auto" class="nav-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="aiba-tab-auto"><?php esc_html_e( 'Automation', 'ai-blog-automator' ); ?></a>
+			<a href="#aiba-tab-seo" id="aiba-tab-link-seo" class="nav-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="aiba-tab-seo"><?php esc_html_e( 'SEO', 'ai-blog-automator' ); ?></a>
+			<a href="#aiba-tab-adv" id="aiba-tab-link-adv" class="nav-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="aiba-tab-adv"><?php esc_html_e( 'Advanced', 'ai-blog-automator' ); ?></a>
+		</div>
 
-		<div id="aiba-tab-api" class="aiba-tab-panel" role="tabpanel" aria-labelledby="aiba-tab-link-api">
+		<form method="post" action="options.php">
+			<?php settings_fields( AIBA_Admin_UI::option_group_name() ); ?>
+
+			<div id="aiba-tab-api" class="aiba-tab-panel" role="tabpanel" aria-labelledby="aiba-tab-link-api">
 			<table class="form-table">
 				<tr>
 					<th scope="row"><label for="aiba_gemini_api_key"><?php esc_html_e( 'Gemini API key', 'ai-blog-automator' ); ?></label></th>
@@ -475,5 +492,6 @@ require AIBA_PLUGIN_DIR . 'templates/partials/shell-start.php';
 		</div>
 
 		<?php submit_button(); ?>
-	</form>
+		</form>
+	</div><!-- .aiba-settings-tabs-card -->
 <?php require AIBA_PLUGIN_DIR . 'templates/partials/shell-end.php'; ?>

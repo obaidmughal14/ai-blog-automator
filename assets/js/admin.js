@@ -46,13 +46,18 @@
 			if (!$nav.length) {
 				return;
 			}
-			var $form = $nav.next('form');
+			var $card = $nav.closest('.aiba-settings-tabs-card');
+			var $form = $card.length ? $card.children('form').first() : $();
+			if (!$form.length) {
+				$form = $nav.next('form');
+			}
 			if (!$form.length) {
 				$form = $('.wrap.aiba-wrap form[action*="options.php"]').first();
 			}
 			if (!$form.length) {
 				return;
 			}
+			var $tabs = $nav.find('a.nav-tab[href^="#aiba-tab-"]');
 			var $panels = $form.find('.aiba-tab-panel');
 
 			function switchTab($tab) {
@@ -64,33 +69,73 @@
 				if (!$panel.length) {
 					return;
 				}
-				$nav.find('a.nav-tab').removeClass('nav-tab-active').attr('aria-selected', 'false');
-				$tab.addClass('nav-tab-active').attr('aria-selected', 'true');
+				$tabs.removeClass('nav-tab-active').attr({ 'aria-selected': 'false', tabindex: '-1' });
+				$tab.addClass('nav-tab-active').attr({ 'aria-selected': 'true', tabindex: '0' });
 				$panels.prop('hidden', true).attr('aria-hidden', 'true');
 				$panel.prop('hidden', false).attr('aria-hidden', 'false');
 			}
 
-			$nav.on('click', 'a.nav-tab', function (e) {
-				e.preventDefault();
-				var $t = $(this);
-				switchTab($t);
-				var href = $t.attr('href');
-				if (href && window.history && window.history.replaceState && typeof URL === 'function') {
-					var u = new URL(window.location.href);
-					u.hash = href;
-					window.history.replaceState(null, '', u.toString());
+			function pushHash(href) {
+				if (!href || !window.history || !window.history.replaceState || typeof URL !== 'function') {
+					return;
 				}
-			});
+				var u = new URL(window.location.href);
+				u.hash = href;
+				window.history.replaceState(null, '', u.toString());
+			}
 
-			var hash = window.location.hash || '';
-			if (hash.indexOf('#aiba-tab-') === 0) {
-				var $match = $nav.find('a.nav-tab').filter(function () {
+			function applyHashFromUrl() {
+				var hash = window.location.hash || '';
+				if (hash.indexOf('#aiba-tab-') !== 0) {
+					return;
+				}
+				var $match = $tabs.filter(function () {
 					return $(this).attr('href') === hash;
 				}).first();
 				if ($match.length) {
 					switchTab($match);
 				}
 			}
+
+			$nav.off('click.aibaTab').on('click.aibaTab', 'a.nav-tab', function (e) {
+				e.preventDefault();
+				var $t = $(this);
+				switchTab($t);
+				pushHash($t.attr('href') || '');
+			});
+
+			$(window).off('hashchange.aibaSettings').on('hashchange.aibaSettings', function () {
+				applyHashFromUrl();
+			});
+
+			$nav.off('keydown.aibaTab').on('keydown.aibaTab', 'a.nav-tab', function (e) {
+				var key = e.key;
+				var keys = ['ArrowRight', 'ArrowLeft', 'Home', 'End'];
+				if (keys.indexOf(key) === -1) {
+					return;
+				}
+				e.preventDefault();
+				var n = $tabs.length;
+				if (n < 1) {
+					return;
+				}
+				var idx = $tabs.index(this);
+				if (key === 'ArrowRight') {
+					idx = (idx + 1) % n;
+				} else if (key === 'ArrowLeft') {
+					idx = (idx - 1 + n) % n;
+				} else if (key === 'Home') {
+					idx = 0;
+				} else {
+					idx = n - 1;
+				}
+				var $next = $tabs.eq(idx);
+				$next.trigger('focus');
+				switchTab($next);
+				pushHash($next.attr('href') || '');
+			});
+
+			applyHashFromUrl();
 		}
 
 		try {

@@ -382,71 +382,160 @@
 	color: #3730a3;
 }
 
+/* Settings: free-tier guidance */
+.wrap.aiba-wrap .aiba-free-tier-notice {
+	margin: 0 0 20px;
+	padding: 1px;
+	border-radius: var(--aiba-radius-sm);
+	background: linear-gradient(135deg, rgba(37, 99, 235, 0.35), rgba(8, 145, 178, 0.3), rgba(124, 58, 237, 0.25));
+	box-shadow: var(--aiba-shadow);
+}
+
+.wrap.aiba-wrap .aiba-free-tier-notice-inner {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+	padding: 16px 18px;
+	border-radius: calc(var(--aiba-radius-sm) - 1px);
+	background: linear-gradient(165deg, #f8fafc 0%, #fff 55%);
+	border: 1px solid rgba(255, 255, 255, 0.85);
+}
+
+.wrap.aiba-wrap .aiba-free-tier-icon {
+	flex-shrink: 0;
+	width: 36px;
+	height: 36px;
+	font-size: 36px;
+	line-height: 1;
+	color: var(--aiba-accent);
+	opacity: 0.9;
+	margin-top: 2px;
+}
+
+.wrap.aiba-wrap .aiba-free-tier-title {
+	display: block;
+	font-size: 15px;
+	margin: 0 0 4px;
+	color: var(--aiba-text);
+}
+
+.wrap.aiba-wrap .aiba-free-tier-lead {
+	margin: 0 0 10px;
+	font-size: 13px;
+	color: var(--aiba-muted);
+}
+
+.wrap.aiba-wrap .aiba-free-tier-list {
+	margin: 0 0 0 1.15em;
+	padding: 0;
+	font-size: 13px;
+	line-height: 1.55;
+	color: var(--aiba-text);
+}
+
+.wrap.aiba-wrap .aiba-free-tier-list li {
+	margin-bottom: 6px;
+}
+
+/* Settings: tab + form single card */
+.wrap.aiba-wrap .aiba-settings-tabs-card {
+	border-radius: var(--aiba-radius);
+	border: 1px solid var(--aiba-border);
+	background: var(--aiba-surface);
+	box-shadow: var(--aiba-shadow);
+	overflow: hidden;
+	margin-bottom: 8px;
+}
+
 /* Settings tabs (flex strip — core .nav-tab floats are reset) */
-.wrap.aiba-wrap .aiba-settings-nav.nav-tab-wrapper {
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav.nav-tab-wrapper {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: flex-end;
-	gap: 4px 6px;
+	align-items: stretch;
+	gap: 2px 4px;
 	float: none;
 	width: 100%;
 	max-width: 100%;
 	box-sizing: border-box;
-	margin: 0 0 0;
-	padding: 10px 12px 0;
-	border: 1px solid var(--aiba-border);
-	border-bottom: none;
-	border-radius: var(--aiba-radius-sm) var(--aiba-radius-sm) 0 0;
-	background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+	margin: 0;
+	padding: 8px 8px 0;
+	border: none;
+	border-bottom: 1px solid var(--aiba-border);
+	border-radius: 0;
+	background: linear-gradient(180deg, #eef2ff 0%, #f1f5f9 100%);
+	box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.65);
 }
 
-.wrap.aiba-wrap .aiba-settings-nav .nav-tab {
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab {
 	float: none;
 	display: inline-flex;
 	align-items: center;
-	margin: 0 0 -1px 0;
-	padding: 10px 18px;
+	justify-content: center;
+	margin: 0;
+	padding: 11px 16px;
 	font-size: 13px;
 	font-weight: 500;
-	line-height: 1.3;
+	line-height: 1.25;
 	border: 1px solid transparent;
 	border-radius: 10px 10px 0 0;
 	background: transparent;
 	color: var(--aiba-muted);
 	text-decoration: none;
-	transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+	transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+	position: relative;
 }
 
-.wrap.aiba-wrap .aiba-settings-nav .nav-tab:hover,
-.wrap.aiba-wrap .aiba-settings-nav .nav-tab:focus {
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab::after {
+	content: '';
+	position: absolute;
+	left: 12px;
+	right: 12px;
+	bottom: 0;
+	height: 3px;
+	border-radius: 3px 3px 0 0;
+	background: transparent;
+	transition: background 0.18s ease;
+}
+
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab:hover,
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab:focus {
 	color: var(--aiba-text);
-	background: rgba(255, 255, 255, 0.55);
-	border-color: rgba(148, 163, 184, 0.45);
+	background: rgba(255, 255, 255, 0.72);
+	border-color: rgba(148, 163, 184, 0.35);
 	outline: none;
-	box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
 
-.wrap.aiba-wrap .aiba-settings-nav .nav-tab-active,
-.wrap.aiba-wrap .aiba-settings-nav .nav-tab-active:hover {
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab:focus-visible {
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+}
+
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab-active,
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab-active:hover {
 	color: var(--aiba-text);
 	font-weight: 600;
 	background: var(--aiba-surface);
-	border-color: var(--aiba-border) var(--aiba-border) var(--aiba-surface);
-	box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.06);
+	border-color: var(--aiba-border) var(--aiba-border) transparent;
+	box-shadow: 0 -3px 14px rgba(15, 23, 42, 0.06);
+	margin-bottom: -1px;
+	padding-bottom: 12px;
 }
 
-.wrap.aiba-wrap .aiba-settings-nav + form {
-	margin-top: 0;
-	padding-top: 0;
-	border: 1px solid var(--aiba-border);
-	border-radius: 0 0 var(--aiba-radius-sm) var(--aiba-radius-sm);
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab-active::after,
+.wrap.aiba-wrap .aiba-settings-tabs-card .aiba-settings-nav .nav-tab-active:hover::after {
+	background: linear-gradient(90deg, var(--aiba-accent), #0891b2);
+}
+
+.wrap.aiba-wrap .aiba-settings-tabs-card > form {
+	margin: 0;
+	padding: 16px 22px 22px;
+	border: none;
+	border-radius: 0;
 	background: var(--aiba-surface);
-	padding: 8px 20px 20px;
-	box-shadow: var(--aiba-shadow);
+	box-shadow: none;
 }
 
-.wrap.aiba-wrap .aiba-settings-nav + form .form-table {
+.wrap.aiba-wrap .aiba-settings-tabs-card > form .form-table {
 	margin-top: 4px;
 }
 

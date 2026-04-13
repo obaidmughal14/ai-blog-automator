@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 2.0.4
+Stable tag: 2.0.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,10 @@ Yes. The plugin stores `_aiba_*` meta and outputs description/canonical/OG tags 
 No. Disable **Auto Google indexing** in settings if you do not use the Indexing API.
 
 == Changelog ==
+
+= 2.0.5 =
+* Settings: added a “free API tiers” guidance panel (Auto + multiple keys, word count / posts per day, gpt-4o-mini, Pexels / indexing tips).
+* Settings: tabs live in a single card with refreshed styling (accent underline on active tab, softer tab bar); tab JS now resolves the options form via `.aiba-settings-tabs-card`, uses namespaced handlers, syncs on `hashchange`, and supports Arrow Left/Right and Home/End for reliable switching.
 
 = 2.0.4 =
 * Generate screen: always show a prominent notice listing recent activity-log errors and warnings for the generation pipeline (LLM, publish, queue, images, etc.) from the last 14 days, with a link to Activity logs.
