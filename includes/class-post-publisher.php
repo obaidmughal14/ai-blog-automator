@@ -65,12 +65,30 @@ class AIBA_Post_Publisher {
 			? array_values( array_filter( array_map( 'sanitize_text_field', $article_data['secondary_keywords'] ) ) )
 			: array();
 
+		$primary_for_kw = strtolower( trim( (string) ( $article_data['primary_keyword'] ?? '' ) ) );
+		$tag_kw         = isset( $article_data['tags'] ) && is_array( $article_data['tags'] ) ? $article_data['tags'] : array();
+		$rank_extra     = array();
+		foreach ( $tag_kw as $t ) {
+			$t = sanitize_text_field( (string) $t );
+			if ( '' === $t || strtolower( $t ) === $primary_for_kw ) {
+				continue;
+			}
+			if ( in_array( $t, $secondary_kw, true ) || in_array( $t, $rank_extra, true ) ) {
+				continue;
+			}
+			$rank_extra[] = $t;
+			if ( count( $rank_extra ) >= 10 ) {
+				break;
+			}
+		}
+
 		$seo_payload = array(
-			'primary_keyword'    => (string) ( $article_data['primary_keyword'] ?? '' ),
-			'secondary_keywords' => $secondary_kw,
-			'meta_description'   => (string) ( $article_data['meta_description'] ?? '' ),
-			'seo_title'          => (string) ( $article_data['seo_title'] ?? $article_data['title'] ?? '' ),
-			'content'            => (string) ( $article_data['content'] ?? '' ),
+			'primary_keyword'           => (string) ( $article_data['primary_keyword'] ?? '' ),
+			'secondary_keywords'        => $secondary_kw,
+			'rank_math_extra_keywords'  => $rank_extra,
+			'meta_description'          => (string) ( $article_data['meta_description'] ?? '' ),
+			'seo_title'                 => (string) ( $article_data['seo_title'] ?? $article_data['title'] ?? '' ),
+			'content'                   => (string) ( $article_data['content'] ?? '' ),
 		);
 
 		$this->seo_handler->apply_seo( $post_id, $seo_payload, ! empty( $settings['force_seo'] ) );
@@ -84,7 +102,12 @@ class AIBA_Post_Publisher {
 		}
 
 		$suggestions = isset( $article_data['image_suggestions'] ) && is_array( $article_data['image_suggestions'] ) ? $article_data['image_suggestions'] : array();
-		$content     = $this->image_handler->replace_image_placeholders( (string) $article_data['content'], $suggestions, $post_id );
+		$content     = $this->image_handler->replace_image_placeholders(
+			(string) $article_data['content'],
+			$suggestions,
+			$post_id,
+			(string) ( $article_data['primary_keyword'] ?? '' )
+		);
 
 		$content = $this->internal_linker->inject_internal_links(
 			$content,
@@ -92,6 +115,8 @@ class AIBA_Post_Publisher {
 			(string) ( $article_data['primary_keyword'] ?? '' ),
 			$topic
 		);
+
+		$content = AIBA_Block_Content::html_to_blocks( $content );
 
 		wp_update_post(
 			array(

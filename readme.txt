@@ -4,7 +4,7 @@ Tags: ai, blog, gemini, seo, automation, content, openai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 2.0.10
+Stable tag: 2.0.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,9 @@ Illustrations ship as **SVG** files in `docs/images/` (open beside the HTML guid
 If you previously relied on Unsplash without a Pexels key, add an **Unsplash Access Key** under Settings → API. Review `docs/USER-GUIDE.html` for image and queue behaviour changes in recent releases.
 
 == Changelog ==
+
+= 2.0.11 =
+* Documentation: fixed SVG guide figures that failed to render (invalid XML control characters and corrupted placeholder text in `docs/images/*.svg`); clarified `USER-GUIDE.html` must stay beside `docs/images/`. HTML guide uses `<base href="./">` and `./images/` paths for reliable figure loading.
 
 = 2.0.10 =
 * Internal links: every `[INTERNAL_LINK_PLACEHOLDER]` variant (with or without `: anchor`) is replaced with a real `<a>`; invalid LLM rows are skipped; one LLM suggestion pass is reused for placeholders and extra wraps; stray machine tokens are stripped from HTML.

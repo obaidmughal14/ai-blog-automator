@@ -10,7 +10,7 @@
   <text x="114" y="229" text-anchor="middle" fill="#fff" font-family="Segoe UI, sans-serif" font-size="14" font-weight="600">Generate</text>
   <rect x="400" y="60" width="336" height="200" fill="#f0f6fc" stroke="#72aee6" rx="4"/>
   <text x="420" y="92" fill="#1d2327" font-family="Segoe UI, sans-serif" font-size="13" font-weight="600">What happens</text>
-  <text x="420" y="120" fill="#50575e" font-family="Segoe UI, sans-serif" font-size="12">1. Outline ’ sections ’ FAQ</text>
+  <text x="420" y="120" fill="#50575e" font-family="Segoe UI, sans-serif" font-size="12">1. Outline, sections, FAQ</text>
   <text x="420" y="145" fill="#50575e" font-family="Segoe UI, sans-serif" font-size="12">2. Images (Pexels / Unsplash)</text>
   <text x="420" y="170" fill="#50575e" font-family="Segoe UI, sans-serif" font-size="12">3. Internal links + SEO meta</text>
   <text x="420" y="195" fill="#50575e" font-family="Segoe UI, sans-serif" font-size="12">4. Draft (or publish per settings)</text>

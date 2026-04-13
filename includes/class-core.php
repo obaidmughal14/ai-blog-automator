@@ -86,6 +86,7 @@ class AIBA_Core {
 				'class-seo-handler.php',
 				'class-image-handler.php',
 				'class-internal-linker.php',
+				'class-block-content.php',
 				'class-post-publisher.php',
 				'class-google-indexing.php',
 				'class-scheduler.php',

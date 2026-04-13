@@ -125,12 +125,16 @@ class AIBA_Content_Generator {
 			$suggested_cats = $this->suggest_wp_categories_ai( $topic, $primary, $job_cat_ids );
 		}
 
+		$raw_seo_title = sanitize_text_field( (string) ( $outline['title'] ?? $topic ) );
+		$raw_meta      = sanitize_textarea_field( (string) ( $outline['meta_description'] ?? '' ) );
+		$polished      = AIBA_SEO_Handler::polish_snippets( $primary, $raw_seo_title, $raw_meta );
+
 		return array(
 			'title'                    => sanitize_text_field( (string) ( $outline['title'] ?? $topic ) ),
 			'slug'                     => sanitize_title( (string) ( $outline['slug'] ?? $primary ) ),
 			'content'                  => $full_content,
-			'meta_description'         => sanitize_textarea_field( (string) ( $outline['meta_description'] ?? '' ) ),
-			'seo_title'                => sanitize_text_field( (string) ( $outline['title'] ?? $topic ) ),
+			'meta_description'         => $polished['meta_description'],
+			'seo_title'                => $polished['seo_title'],
 			'primary_keyword'          => $primary,
 			'secondary_keywords'       => $secondary,
 			'image_suggestions'        => array_values( array_filter( array_map( 'sanitize_text_field', $image_suggestions ) ) ),
@@ -151,8 +155,11 @@ class AIBA_Content_Generator {
 - Use every secondary keyword phrase at least once in the article when secondary list is not empty: %2$s
 - Do not use emojis or emoticons.
 - Do not use en dashes or em dashes; use commas, periods, or the word "and" instead.
-- Add at least two outbound links to reputable third party sources (official docs, government, standards bodies, or major publishers) using real https URLs you trust. Use <a href="https://..." rel="noopener noreferrer">anchor</a>. Prefer primary sources.
-- Keep internal link placeholders where requested so the site can wire them to existing posts and pages.',
+- Never start a paragraph with the phrases "In conclusion", "In summary", "Final remarks", or "Wrapping up".
+- Put the primary keyword inside at least one H2 or H3 heading in each major section (natural wording).
+- Add at least two outbound links to reputable third party sources (official docs, government, standards bodies, or major publishers) using real https URLs you trust. Use <a href="https://..." rel="noopener noreferrer">anchor text</a> (do follow is default; do not add nofollow on editorial sources unless required).
+- Keep internal link placeholders where requested so the site can wire them to existing posts and pages.
+- For Rank Math style scoring: SEO title and meta description must contain the primary keyword; first paragraph should include the primary keyword early; image alt ideas should include the primary or secondary keywords where relevant.',
 			$primary,
 			$sec
 		);
@@ -174,6 +181,8 @@ class AIBA_Content_Generator {
 		);
 		$html       = strtr( $html, $dash_map );
 		$html       = (string) preg_replace( '/,(\s*,)+/u', ',', $html );
+		$html       = (string) preg_replace( '/(<p(?:\s[^>]*)?>)\s*In\s+conclusion,?\s+/iu', '$1', $html );
+		$html       = (string) preg_replace( '/(<p(?:\s[^>]*)?>)\s*In\s+summary,?\s+/iu', '$1', $html );
 		return $this->strip_banned_wrapup_headings( $html );
 	}
 
@@ -284,8 +293,9 @@ class AIBA_Content_Generator {
 			'Write an introduction (150-200 words) for an article titled "%1$s".
 Primary keyword: %2$s. Secondary keywords: %3$s.
 Tone: %4$s. Language: %5$s.
-Hook the reader, include the primary keyword naturally, and briefly outline what the article covers: %6$s.
+Hook the reader, include the primary keyword in the first sentence, and briefly outline what the article covers: %6$s.
 Include one outbound link to a reputable source when it fits (real https URL, rel="noopener noreferrer").
+Do not begin with "In conclusion", "In summary", or similar wrap-up phrases.
 Output clean HTML only: <p>, <strong>, <em>. No H1.',
 			$title,
 			$primary,
@@ -305,7 +315,7 @@ Output clean HTML only: <p>, <strong>, <em>. No H1.',
 Primary keyword: %2$s. Secondary keywords to weave in if natural: %3$s. Tone: %4$s. Language: %5$s.
 Requirements:
 - Output clean HTML only using <p>, <strong>, <em>. No headings of any level.
-- Do not use these words or phrases anywhere: conclusion, concluding, final remarks, in summary, to sum up, wrapping up, closing thoughts, overall.
+- Do not use these words or phrases anywhere: conclusion, concluding, final remarks, in summary, in conclusion, to sum up, wrapping up, closing thoughts, overall.
 - Summarize one or two key ideas and end with one clear next step for the reader.',
 			$title,
 			$primary,
@@ -376,7 +386,8 @@ Requirements:
 - Write in %8$s tone, language %9$s
 - Output clean HTML only: use <h2>, <h3>, <p>, <ul>, <ol>, <strong>, <em>
 - Do NOT include the main <h1> title
-- Add a [IMAGE_PLACEHOLDER: %10$s] tag where an image would naturally fit
+- Add a [IMAGE_PLACEHOLDER: %10$s] tag where an image would naturally fit; the placeholder description should relate to the section and include words from the primary keyword "%3$s" when natural (helps image alt SEO).
+- Put the primary keyword "%3$s" into at least one <h3> subheading text in this section (you may add minor words for grammar).
 - Where an internal link fits, output ONLY this exact token with a short anchor phrase after the colon (no other wording): [INTERNAL_LINK_PLACEHOLDER: anchor phrase]. Never write the words INTERNAL_LINK_PLACEHOLDER or "placeholder" as plain text, never use an empty token, and never write sentences like "check out our" before the token without a real anchor inside the brackets.
 - Where you state a specific fact or statistic, prefer one outbound link to an authoritative primary source in that section.',
 			$heading,
@@ -415,10 +426,10 @@ Return ONLY valid JSON:
 {
   "title": "SEO-optimized H1 title (under 60 chars)",
   "slug": "url-friendly-slug",
-  "meta_description": "Compelling meta description 150-160 chars containing primary keyword",
+  "meta_description": "Must be 150-160 characters and START with the primary keyword phrase %2$s (then continue naturally)",
   "sections": [
     {
-      "heading": "H2 heading",
+      "heading": "H2 heading that includes words from the primary keyword when possible",
       "subheadings": ["H3 subheading 1", "H3 subheading 2"],
       "notes": "What to cover in this section"
     }

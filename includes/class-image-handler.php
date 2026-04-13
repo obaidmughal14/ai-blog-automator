@@ -102,6 +102,10 @@ class AIBA_Image_Handler {
 
 		update_post_meta( $id, '_aiba_image_source', 'unsplash' );
 		update_post_meta( $id, '_aiba_image_credit', trim( $credit ) );
+		update_post_meta( $id, '_aiba_photographer_name', $uname );
+		$user_page = isset( $photo['user']['links']['html'] ) ? esc_url_raw( (string) $photo['user']['links']['html'] ) : '';
+		update_post_meta( $id, '_aiba_photographer_url', $user_page );
+		update_post_meta( $id, '_aiba_unsplash_photo_page', $plink );
 		if ( ! empty( $photo['id'] ) ) {
 			update_post_meta( $id, '_aiba_unsplash_photo_id', sanitize_text_field( (string) $photo['id'] ) );
 		}
@@ -209,6 +213,10 @@ class AIBA_Image_Handler {
 		}
 		update_post_meta( $id, '_aiba_image_credit', $credit );
 		update_post_meta( $id, '_aiba_image_source', 'pexels' );
+		update_post_meta( $id, '_aiba_photographer_name', $photographer );
+		$photog_page = isset( $photo['photographer_url'] ) ? esc_url_raw( (string) $photo['photographer_url'] ) : '';
+		update_post_meta( $id, '_aiba_photographer_url', $photog_page );
+		update_post_meta( $id, '_aiba_pexels_page_url', $pexels_url );
 		if ( ! empty( $photo['id'] ) ) {
 			update_post_meta( $id, '_aiba_pexels_photo_id', absint( $photo['id'] ) );
 		}
@@ -219,8 +227,9 @@ class AIBA_Image_Handler {
 	 * Replace [IMAGE_PLACEHOLDER: ...] tags.
 	 *
 	 * @param array<int, string> $suggestions Fallback descriptions.
+	 * @param string             $primary_keyword Appended to alt text for Rank Math image checks when missing.
 	 */
-	public function replace_image_placeholders( string $content, array $suggestions, int $parent_post_id = 0 ): string {
+	public function replace_image_placeholders( string $content, array $suggestions, int $parent_post_id = 0, string $primary_keyword = '' ): string {
 		if ( ! preg_match_all( '/\[IMAGE_PLACEHOLDER:\s*([^\]]+)\]/', $content, $matches, PREG_SET_ORDER ) ) {
 			return $content;
 		}
@@ -245,11 +254,22 @@ class AIBA_Image_Handler {
 				continue;
 			}
 
-			$alt    = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
-			$alt    = $alt ? sanitize_text_field( $alt ) : $desc;
-			$credit = get_post_meta( $attachment_id, '_aiba_image_credit', true );
-			$cap    = ( is_string( $credit ) && $credit !== '' ) ? $credit : $desc;
-			$cap    = $cap !== '' ? '<figcaption>' . esc_html( $cap ) . '</figcaption>' : '';
+			$alt = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
+			$alt = $alt ? sanitize_text_field( $alt ) : $desc;
+			if ( $primary_keyword !== '' && stripos( $alt, $primary_keyword ) === false ) {
+				$alt = trim( $alt . ' — ' . $primary_keyword );
+				if ( strlen( $alt ) > 125 ) {
+					$alt = substr( $alt, 0, 122 ) . '…';
+				}
+				update_post_meta( $attachment_id, '_wp_attachment_image_alt', $alt );
+			}
+			$cap_html = self::build_figcaption_html( $attachment_id );
+			if ( '' === $cap_html ) {
+				$credit = get_post_meta( $attachment_id, '_aiba_image_credit', true );
+				$cap    = ( is_string( $credit ) && $credit !== '' ) ? $credit : $desc;
+				$cap_html = $cap !== '' ? wp_kses_post( self::linkify_plain_urls( $cap ) ) : '';
+			}
+			$cap = '' !== $cap_html ? '<figcaption>' . $cap_html . '</figcaption>' : '';
 			$html   = sprintf(
 				'<figure class="aiba-figure"><img src="%1$s" alt="%2$s" loading="lazy" decoding="async" />%3$s</figure>',
 				esc_url( $url ),
@@ -311,5 +331,74 @@ class AIBA_Image_Handler {
 
 		update_post_meta( $id, '_wp_attachment_image_alt', sanitize_text_field( $alt ) );
 		return (int) $id;
+	}
+
+	/**
+	 * Figcaption HTML with photographer and stock site as clickable links.
+	 */
+	public static function build_figcaption_html( int $attachment_id ): string {
+		$source = (string) get_post_meta( $attachment_id, '_aiba_image_source', true );
+		$name   = (string) get_post_meta( $attachment_id, '_aiba_photographer_name', true );
+		$purl   = (string) get_post_meta( $attachment_id, '_aiba_photographer_url', true );
+		if ( 'pexels' === $source ) {
+			$page = (string) get_post_meta( $attachment_id, '_aiba_pexels_page_url', true );
+			$bits = array();
+			if ( $name !== '' && $purl !== '' ) {
+				$bits[] = sprintf(
+					'Photo by <a href="%s" rel="noopener noreferrer" target="_blank">%s</a>',
+					esc_url( $purl ),
+					esc_html( $name )
+				);
+			} elseif ( $name !== '' ) {
+				$bits[] = sprintf( 'Photo by %s', esc_html( $name ) );
+			}
+			if ( $page !== '' ) {
+				$bits[] = sprintf(
+					'on <a href="%s" rel="noopener noreferrer" target="_blank">Pexels</a>',
+					esc_url( $page )
+				);
+			}
+			return implode( ' ', array_filter( $bits ) );
+		}
+		if ( 'unsplash' === $source ) {
+			$page = (string) get_post_meta( $attachment_id, '_aiba_unsplash_photo_page', true );
+			$bits = array();
+			if ( $name !== '' && $purl !== '' ) {
+				$bits[] = sprintf(
+					'Photo by <a href="%s" rel="noopener noreferrer" target="_blank">%s</a>',
+					esc_url( $purl ),
+					esc_html( $name )
+				);
+			} elseif ( $name !== '' ) {
+				$bits[] = sprintf( 'Photo by %s', esc_html( $name ) );
+			}
+			if ( $page !== '' ) {
+				$bits[] = sprintf(
+					'on <a href="%s" rel="noopener noreferrer" target="_blank">Unsplash</a>',
+					esc_url( $page )
+				);
+			}
+			return implode( ' ', array_filter( $bits ) );
+		}
+		return '';
+	}
+
+	/**
+	 * Legacy plain-text credits: turn http(s) URLs into anchor tags.
+	 */
+	private static function linkify_plain_urls( string $text ): string {
+		$parts = preg_split( '#(https?://[^\s<]+)#i', $text, -1, PREG_SPLIT_DELIM_CAPTURE );
+		$out   = '';
+		foreach ( $parts as $part ) {
+			if ( '' === $part ) {
+				continue;
+			}
+			if ( preg_match( '#^https?://#i', $part ) ) {
+				$out .= '<a href="' . esc_url( $part ) . '" rel="noopener noreferrer" target="_blank">' . esc_html( $part ) . '</a>';
+			} else {
+				$out .= esc_html( $part );
+			}
+		}
+		return $out;
 	}
 }

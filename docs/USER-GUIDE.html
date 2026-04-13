@@ -3,6 +3,7 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<base href="./" />
 	<title>AI Blog Automator — User Guide</title>
 	<style>
 		:root {
@@ -108,7 +109,7 @@
 <body>
 	<header>
 		<h1>AI Blog Automator — User Guide</h1>
-		<p>Full documentation for site administrators. Keep this file with the plugin (<code>docs/USER-GUIDE.html</code>). Figures are SVG diagrams that open offline next to this file.</p>
+		<p>Full documentation for site administrators. Keep <code>USER-GUIDE.html</code> in the <code>docs</code> folder next to <code>images/</code> so figure paths resolve. Open the file directly (double-click or File → Open); moving only the HTML file will break diagrams.</p>
 	</header>
 	<main>
 		<nav class="toc" aria-label="Table of contents">
@@ -134,7 +135,7 @@
 			<h2>1. What the plugin does</h2>
 			<p>AI Blog Automator connects WordPress to large language models (Gemini by default, with optional OpenAI, Anthropic Claude, and custom OpenAI-compatible APIs). It generates long-form HTML articles from topics and keywords, adds FAQ blocks, attaches stock images, injects internal links, writes SEO meta for supported plugins, and optionally notifies Google’s Indexing API.</p>
 			<figure>
-				<img src="images/05-pipeline.svg" width="760" height="200" alt="Diagram: Queue to cron to LLM to WordPress post to SEO" loading="lazy" />
+				<img src="./images/05-pipeline.svg" width="760" height="200" alt="Diagram: Queue to cron to LLM to WordPress post to SEO" loading="lazy" />
 				<figcaption><strong>Figure 1.</strong> High-level pipeline: queued jobs are processed by WordPress cron (or manual action), the LLM produces content, a post is created, then images, links, and SEO run.</figcaption>
 			</figure>
 		</section>
@@ -164,7 +165,7 @@
 			<h2>4. Admin menu overview</h2>
 			<p>The plugin adds a top-level <strong>AI Automator</strong> item in the WordPress admin sidebar. Submenus typically include Dashboard, Settings, Generate, Queue, and Activity logs (exact labels may vary with translations).</p>
 			<figure>
-				<img src="images/01-admin-menu.svg" width="760" height="280" alt="Illustrated sidebar with AI Automator highlighted" loading="lazy" />
+				<img src="./images/01-admin-menu.svg" width="760" height="280" alt="Illustrated sidebar with AI Automator highlighted" loading="lazy" />
 				<figcaption><strong>Figure 2.</strong> Conceptual admin layout: dark sidebar with “AI Automator” highlighted and sample sub-items.</figcaption>
 			</figure>
 		</section>
@@ -173,7 +174,7 @@
 			<h2>5. Settings walkthrough</h2>
 			<p>The <strong>API</strong> tab is where you connect external services. After saving, use <strong>Test API connections</strong> to verify Gemini, optional providers, Pexels, Unsplash, and indexing credentials.</p>
 			<figure>
-				<img src="images/02-settings-api.svg" width="760" height="320" alt="Illustrated API settings fields and Save button" loading="lazy" />
+				<img src="./images/02-settings-api.svg" width="760" height="320" alt="Illustrated API settings fields and Save button" loading="lazy" />
 				<figcaption><strong>Figure 3.</strong> API tab concept: Gemini, Pexels, Unsplash keys and Save. Your real screen uses WordPress form styling.</figcaption>
 			</figure>
 			<h3>Other tabs (summary)</h3>
@@ -190,7 +191,7 @@
 			<h2>6. Generate a single post</h2>
 			<p>Use <strong>AI Automator → Generate</strong> for a one-off article. Fill topic/title and primary keyword, add optional secondary keywords and categories if shown, then submit. The browser runs an AJAX request; when complete, follow the link to edit the new draft.</p>
 			<figure>
-				<img src="images/04-generate-flow.svg" width="760" height="300" alt="Generate form and numbered pipeline steps" loading="lazy" />
+				<img src="./images/04-generate-flow.svg" width="760" height="300" alt="Generate form and numbered pipeline steps" loading="lazy" />
 				<figcaption><strong>Figure 4.</strong> Generate screen concept and what the pipeline does (outline, images, links, SEO).</figcaption>
 			</figure>
 			<div class="note">Always review AI output for factual accuracy, licensing of cited sources, and broken or hallucinated URLs before publishing.</div>
@@ -201,7 +202,7 @@
 			<p><strong>Single “Add to queue”</strong> creates one pending job with topic, focus keyword, optional other keywords, categories, and article format.</p>
 			<p><strong>Bulk queue</strong> accepts many lines at once—ideal for a month of titles from a spreadsheet.</p>
 			<figure>
-				<img src="images/03-queue-bulk.svg" width="760" height="360" alt="Bulk textarea with tab-separated example lines" loading="lazy" />
+				<img src="./images/03-queue-bulk.svg" width="760" height="360" alt="Bulk textarea with tab-separated example lines" loading="lazy" />
 				<figcaption><strong>Figure 5.</strong> Bulk paste: tab-separated columns (title, focus, other keywords, category IDs, format slug) or pipe-separated equivalent; stagger options spread publish dates.</figcaption>
 			</figure>
 			<h3>Column reference (bulk)</h3>

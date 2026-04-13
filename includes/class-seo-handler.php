@@ -58,6 +58,84 @@ class AIBA_SEO_Handler {
 	}
 
 	/**
+	 * Tune SEO title and meta for Rank Math / Yoast style checks (keyword at start, in meta, power word).
+	 *
+	 * @return array{seo_title: string, meta_description: string}
+	 */
+	public static function polish_snippets( string $primary, string $seo_title, string $meta_description ): array {
+		$primary = trim( $primary );
+		$title   = trim( $seo_title );
+		$desc    = trim( $meta_description );
+		if ( '' === $primary ) {
+			return array(
+				'seo_title'          => $title,
+				'meta_description'   => $desc,
+			);
+		}
+		if ( $title !== '' && ! self::string_starts_with_keyword( $title, $primary ) ) {
+			$title = $primary . ': ' . $title;
+		}
+		$title = self::truncate_utf8( $title, 70 );
+		$powers = array( 'best', 'ultimate', 'complete', 'essential', 'proven', 'simple', 'easy', 'guide', 'top', 'free', 'smart', 'powerful', 'quick' );
+		$tl     = strtolower( $title );
+		$has_pw = false;
+		foreach ( $powers as $w ) {
+			if ( preg_match( '/\b' . preg_quote( $w, '/' ) . '\b/u', $tl ) ) {
+				$has_pw = true;
+				break;
+			}
+		}
+		if ( ! $has_pw && self::strlen_utf8( $title ) < 58 ) {
+			$title = $title . ' | Proven Guide';
+			$title = self::truncate_utf8( $title, 70 );
+		}
+		$tl            = strtolower( $title );
+		$sentiment_hits = array( 'best', 'worst', 'easy', 'hard', 'simple', 'smart', 'fast', 'slow', 'great', 'bad', 'good', 'why', 'how', 'never', 'always', 'stop', 'start', 'fix', 'avoid', 'win', 'lose' );
+		$has_sent       = false;
+		foreach ( $sentiment_hits as $w ) {
+			if ( preg_match( '/\b' . preg_quote( $w, '/' ) . '\b/u', $tl ) ) {
+				$has_sent = true;
+				break;
+			}
+		}
+		if ( ! $has_sent && self::strlen_utf8( $title ) < 62 ) {
+			$title = $title . ' | Smart Tips';
+			$title = self::truncate_utf8( $title, 70 );
+		}
+		if ( $desc !== '' && ! self::string_starts_with_keyword( $desc, $primary ) ) {
+			$desc = $primary . '. ' . ltrim( $desc );
+		}
+		$desc = self::truncate_utf8( $desc, 160 );
+		return array(
+			'seo_title'        => $title,
+			'meta_description' => $desc,
+		);
+	}
+
+	private static function string_starts_with_keyword( string $haystack, string $needle ): bool {
+		$h = ltrim( $haystack );
+		$n = trim( $needle );
+		if ( '' === $n ) {
+			return true;
+		}
+		return 0 === stripos( $h, $n );
+	}
+
+	private static function strlen_utf8( string $s ): int {
+		return function_exists( 'mb_strlen' ) ? (int) mb_strlen( $s, 'UTF-8' ) : strlen( $s );
+	}
+
+	private static function truncate_utf8( string $s, int $max ): string {
+		if ( self::strlen_utf8( $s ) <= $max ) {
+			return $s;
+		}
+		if ( function_exists( 'mb_substr' ) ) {
+			return (string) mb_substr( $s, 0, max( 0, $max - 1 ), 'UTF-8' ) . '…';
+		}
+		return substr( $s, 0, $max - 1 ) . '…';
+	}
+
+	/**
 	 * Apply SEO meta to post.
 	 *
 	 * @param int                  $post_id Post ID.
@@ -68,6 +146,9 @@ class AIBA_SEO_Handler {
 		$primary = sanitize_text_field( (string) ( $seo_data['primary_keyword'] ?? '' ) );
 		$desc    = sanitize_textarea_field( (string) ( $seo_data['meta_description'] ?? '' ) );
 		$title   = sanitize_text_field( (string) ( $seo_data['seo_title'] ?? '' ) );
+		$pol     = self::polish_snippets( $primary, $title, $desc );
+		$title   = $pol['seo_title'];
+		$desc    = $pol['meta_description'];
 
 		$mode = get_option( 'aiba_seo_plugin', 'auto' );
 		if ( 'auto' === $mode ) {
@@ -85,8 +166,26 @@ class AIBA_SEO_Handler {
 				update_post_meta( $post_id, '_yoast_wpseo_title', $title );
 			}
 		} elseif ( 'rankmath' === $mode ) {
-			if ( $force || '' === (string) get_post_meta( $post_id, 'rank_math_focus_keyword', true ) ) {
-				update_post_meta( $post_id, 'rank_math_focus_keyword', $primary );
+			$secondary = self::sanitize_secondary_keywords_list( $seo_data, $primary );
+			$from_tags = isset( $seo_data['rank_math_extra_keywords'] ) && is_array( $seo_data['rank_math_extra_keywords'] )
+				? $seo_data['rank_math_extra_keywords']
+				: array();
+			$from_tags = array_map( 'sanitize_text_field', $from_tags );
+			$merged    = array_merge( array( $primary ), $secondary, $from_tags );
+			$focus_parts = array_values(
+				array_unique(
+					array_filter(
+						$merged,
+						static function ( $s ) {
+							return is_string( $s ) && $s !== '';
+						}
+					)
+				)
+			);
+			$focus_parts = array_slice( $focus_parts, 0, 15 );
+			$focus_str = implode( ', ', $focus_parts );
+			if ( $focus_str !== '' ) {
+				update_post_meta( $post_id, 'rank_math_focus_keyword', $focus_str );
 			}
 			if ( $force || '' === (string) get_post_meta( $post_id, 'rank_math_description', true ) ) {
 				update_post_meta( $post_id, 'rank_math_description', $desc );
@@ -168,10 +267,6 @@ class AIBA_SEO_Handler {
 				if ( $force || '' === (string) get_post_meta( $post_id, '_yoast_wpseo_focuskeywords', true ) ) {
 					update_post_meta( $post_id, '_yoast_wpseo_focuskeywords', wp_json_encode( $rows ) );
 				}
-			}
-		} elseif ( 'rankmath' === $mode ) {
-			if ( $force || '' === (string) get_post_meta( $post_id, 'rank_math_additional_keywords', true ) ) {
-				update_post_meta( $post_id, 'rank_math_additional_keywords', $syn_line );
 			}
 		} elseif ( 'native' === $mode ) {
 			if ( $force || '' === (string) get_post_meta( $post_id, '_aiba_secondary_keywords', true ) ) {
