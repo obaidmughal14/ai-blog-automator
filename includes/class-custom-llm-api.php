@@ -35,10 +35,6 @@ class AIBA_Custom_LLM_API {
 		return $h !== '' ? $h : 'Authorization';
 	}
 
-	public function reset_throttle_counter(): void {
-		$this->request_index = 0;
-	}
-
 	public function throttle_if_needed(): void {
 		++$this->request_index;
 		if ( $this->request_index > 2 ) {
